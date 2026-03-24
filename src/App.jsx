@@ -1,21 +1,84 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { initializeApp } from "firebase/app";
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
+  onAuthStateChanged,
+} from "firebase/auth";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  increment,
+} from "firebase/firestore";
 import Header from "./components/Header";
 import Subscription from "./components/Subscription";
+import { getAnalytics } from "firebase/analytics";
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+};
+// Initialize Firebase
 
-// ─── Dummy Data Generator ────────────────────────────────────────────────────
+const app      = initializeApp(firebaseConfig);
+const auth     = getAuth(app);
+const db       = getFirestore(app);
+const provider = new GoogleAuthProvider();
+const analytics = getAnalytics(app);
+const FREE_CREDITS = 3;
+
+// ─── Firestore helpers ────────────────────────────────────────────────────────
+// Called once when a brand new user signs in for the first time
+async function createUserDoc(firebaseUser) {
+  const ref = doc(db, "users", firebaseUser.uid);
+  await setDoc(ref, {
+    name:      firebaseUser.displayName,
+    email:     firebaseUser.email,
+    photoURL:  firebaseUser.photoURL,
+    plan:      "free",       // "free" | "pro_monthly" | "pro_yearly"
+    credits:   FREE_CREDITS,
+    createdAt: new Date().toISOString(),
+  });
+  return { plan: "free", credits: FREE_CREDITS };
+}
+
+// Returns the user's Firestore doc data, creating it if it doesn't exist
+async function getUserData(firebaseUser) {
+  const ref  = doc(db, "users", firebaseUser.uid);
+  const snap = await getDoc(ref);
+  if (snap.exists()) return snap.data();
+  return createUserDoc(firebaseUser);
+}
+
+// Decrements credits by 1 — call right before generating
+async function spendCredit(uid) {
+  const ref = doc(db, "users", uid);
+  await updateDoc(ref, { credits: increment(-1) });
+}
+
+// ─── Dummy Data Generator ─────────────────────────────────────────────────────
 function generateDummyResult(formData) {
-  const name = formData.projectName || "the project";
-  const stack = formData.techStack || "React, Node.js, PostgreSQL";
+  const name  = formData.projectName || "the project";
+  const stack = formData.techStack   || "React, Node.js, PostgreSQL";
   const parts = stack.split(",").map((s) => s.trim());
 
   return {
     elevatorPitch: `${name} is a production-grade application I built to solve a real-world problem at scale. Using ${stack}, I architected a system that delivers a seamless user experience while maintaining high performance and reliability. The project demonstrates my ability to take an idea from concept to a fully deployed, user-facing product — handling everything from database schema design to UI/UX decisions.`,
 
-    detailedExplanation: `${name} started as a solution to a gap I noticed in existing tools. I began with a thorough requirements analysis, breaking the problem into clearly defined modules.\n\nOn the frontend, I used ${parts[0] || "React"} to build a component-driven UI focused on responsiveness and accessibility. On the backend, I implemented RESTful APIs with authentication, input validation, and error handling.\n\nI set up a CI/CD pipeline to automate testing and deployments, and used environment-based config to manage staging vs production. The result is a scalable, maintainable codebase following industry best practices.`,
+    detailedExplanation: `${name} started as a solution to a gap I noticed in existing tools. I began with thorough requirements analysis, breaking the problem into clearly defined modules.\n\nOn the frontend, I used ${parts[0] || "React"} to build a component-driven UI focused on responsiveness and accessibility. On the backend, I implemented RESTful APIs with authentication, input validation, and error handling.\n\nI set up a CI/CD pipeline to automate testing and deployments, and used environment-based config to manage staging vs production. The result is a scalable, maintainable codebase following industry best practices.`,
 
     techStackJustification: `Every technology in ${name} was chosen deliberately:\n\n• ${parts[0] || "React"}: Chosen for its component reusability and large ecosystem — it let me move fast while keeping the UI maintainable.\n\n• ${parts[1] || "Node.js"}: Enabled a unified JavaScript codebase, reducing context switching and improving velocity.\n\n• ${parts[2] || "PostgreSQL"}: Selected for its strong ACID guarantees and the relational nature of the data.\n\nI evaluated alternatives for each choice and made tradeoffs based on team expertise, community support, and long-term maintainability.`,
 
-    challengesAndSolutions: `The most significant challenge I faced was: "${formData.challenge}".\n\nMy approach:\n1. I broke the problem down into smaller, testable hypotheses.\n2. I researched existing solutions and patterns used in industry.\n3. I implemented a prototype, measured its performance, and iterated.\n\nThe breakthrough came when I re-evaluated core assumptions before diving deep into implementation. This reduced complexity significantly and unblocked progress. It reinforced the value of stepping back before writing more code.`,
+    challengesAndSolutions: `The most significant challenge I faced was: "${formData.challenge}".\n\nMy approach:\n1. I broke the problem down into smaller, testable hypotheses.\n2. I researched existing solutions and patterns used in industry.\n3. I implemented a prototype, measured its performance, and iterated.\n\nThe breakthrough came when I re-evaluated core assumptions before diving deep into implementation. This reduced complexity significantly and unblocked progress.`,
 
     interviewQA: [
       {
@@ -24,21 +87,21 @@ function generateDummyResult(formData) {
       },
       {
         q: "How did you ensure code quality and maintainability?",
-        a: `I enforced consistent code style with ESLint and Prettier, wrote unit and integration tests for all critical paths, and used PR reviews as learning opportunities. Every feature was developed in a feature branch and merged only after passing CI checks.`,
+        a: `I enforced consistent code style with ESLint and Prettier, wrote unit and integration tests for all critical paths, and used PR reviews as learning opportunities. Every feature lived in a feature branch and merged only after passing CI checks.`,
       },
       {
         q: "How would you scale this if user load 10x'd?",
-        a: `I'd identify bottlenecks using APM tooling first. Likely candidates are database query performance and API throughput. I'd introduce read replicas, add Redis caching, and consider extracting high-load services into independently scalable microservices.`,
+        a: `I'd identify bottlenecks using APM tooling first. Likely candidates are database query performance and API throughput. I'd introduce read replicas, add Redis caching, and extract high-load services into independently scalable microservices.`,
       },
       {
         q: "What would you do differently if you started over?",
-        a: `I'd invest more in observability from day one — structured logging, distributed tracing, and alerting. I added these reactively after a production issue, and doing it proactively would have saved significant debugging time.`,
+        a: `I'd invest more in observability from day one — structured logging, distributed tracing, and alerting. I added these reactively after a production issue; doing it proactively would have saved significant debugging time.`,
       },
     ],
   };
 }
 
-// ─── Icons ───────────────────────────────────────────────────────────────────
+// ─── Icons ────────────────────────────────────────────────────────────────────
 const CheckIcon = () => (
   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -61,7 +124,7 @@ const LockIcon = () => (
   </svg>
 );
 
-// ─── ResultCard ──────────────────────────────────────────────────────────────
+// ─── Result Card config ───────────────────────────────────────────────────────
 const CARD_CONFIG = {
   "Elevator Pitch": {
     light: "text-violet-600 bg-violet-50 border-violet-200",
@@ -90,7 +153,6 @@ const CARD_CONFIG = {
   },
 };
 
-// Which cards are locked for free users (show only first 2 free)
 const FREE_UNLOCKED = ["Elevator Pitch", "Interview Q&A"];
 const ALL_CARDS = [
   "Elevator Pitch",
@@ -100,9 +162,10 @@ const ALL_CARDS = [
   "Interview Q&A",
 ];
 
+// ─── ResultCard ───────────────────────────────────────────────────────────────
 function ResultCard({ title, content, dark, locked, onUpgrade }) {
   const [copied, setCopied] = useState(false);
-  const cfg = CARD_CONFIG[title] || { light: "text-stone-600 bg-stone-50 border-stone-200", dark: "text-stone-400 bg-stone-800 border-stone-600", icon: null };
+  const cfg      = CARD_CONFIG[title] || { light: "text-stone-600 bg-stone-50 border-stone-200", dark: "text-stone-400 bg-stone-800 border-stone-600", icon: null };
   const iconColor = dark ? cfg.dark : cfg.light;
 
   const handleCopy = () => {
@@ -115,13 +178,9 @@ function ResultCard({ title, content, dark, locked, onUpgrade }) {
   };
 
   return (
-    <div className={`border rounded-2xl overflow-hidden shadow-sm transition-all duration-200 relative
-      ${dark
-        ? "bg-stone-900 border-stone-700 hover:border-stone-500"
-        : "bg-white border-stone-200 hover:border-stone-300 hover:shadow-md"
-      }
-      ${locked ? "opacity-80" : ""}
-    `}>
+    <div className={`border rounded-2xl overflow-hidden shadow-sm transition-all duration-200
+      ${dark ? "bg-stone-900 border-stone-700 hover:border-stone-500" : "bg-white border-stone-200 hover:border-stone-300 hover:shadow-md"}
+      ${locked ? "opacity-80" : ""}`}>
       <div className={`flex items-center justify-between px-5 py-4 border-b ${dark ? "border-stone-800" : "border-stone-100"}`}>
         <div className="flex items-center gap-2.5">
           <div className={`p-1.5 rounded-lg border ${iconColor}`}>{cfg.icon}</div>
@@ -129,8 +188,7 @@ function ResultCard({ title, content, dark, locked, onUpgrade }) {
           {locked && (
             <span className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full
               ${dark ? "bg-amber-900/40 text-amber-400 border border-amber-700" : "bg-amber-50 text-amber-600 border border-amber-200"}`}>
-              <LockIcon />
-              Pro
+              <LockIcon /> Pro
             </span>
           )}
         </div>
@@ -151,8 +209,7 @@ function ResultCard({ title, content, dark, locked, onUpgrade }) {
       </div>
 
       {locked ? (
-        // Locked overlay
-        <div className={`px-5 py-8 flex flex-col items-center justify-center text-center gap-3`}>
+        <div className="px-5 py-8 flex flex-col items-center justify-center text-center gap-3">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center ${dark ? "bg-stone-800" : "bg-stone-100"}`}>
             <LockIcon />
           </div>
@@ -187,7 +244,7 @@ function ResultCard({ title, content, dark, locked, onUpgrade }) {
   );
 }
 
-// ─── Skeleton ────────────────────────────────────────────────────────────────
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
 function SkeletonCard({ dark }) {
   return (
     <div className={`border rounded-2xl overflow-hidden animate-pulse ${dark ? "bg-stone-900 border-stone-700" : "bg-white border-stone-200"}`}>
@@ -207,7 +264,7 @@ function SkeletonCard({ dark }) {
   );
 }
 
-// ─── Credits banner ──────────────────────────────────────────────────────────
+// ─── Credits Banner ───────────────────────────────────────────────────────────
 function CreditsBanner({ credits, dark, onUpgrade, isPro }) {
   if (isPro) return null;
   return (
@@ -228,10 +285,7 @@ function CreditsBanner({ credits, dark, onUpgrade, isPro }) {
       <button
         onClick={onUpgrade}
         className={`shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors duration-150
-          ${credits > 0
-            ? "bg-violet-600 text-white hover:bg-violet-700"
-            : "bg-red-600 text-white hover:bg-red-700"
-          }`}
+          ${credits > 0 ? "bg-violet-600 text-white hover:bg-violet-700" : "bg-red-600 text-white hover:bg-red-700"}`}
       >
         Upgrade
       </button>
@@ -239,33 +293,62 @@ function CreditsBanner({ credits, dark, onUpgrade, isPro }) {
   );
 }
 
-// ─── Mock Login Modal ─────────────────────────────────────────────────────────
-function LoginModal({ dark, onClose, onLogin }) {
+// ─── Login Modal — REAL Firebase Google Auth ──────────────────────────────────
+function LoginModal({ dark, onClose, onLoginSuccess, authLoading, authError }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative w-full max-w-sm rounded-2xl border p-6 shadow-2xl
+      <div className={`relative w-full max-w-sm rounded-2xl border p-6 shadow-2xl transition-colors duration-300
         ${dark ? "bg-stone-950 border-stone-800" : "bg-white border-stone-200"}`}>
-        <h2 className={`text-base font-bold mb-1 ${dark ? "text-stone-50" : "text-stone-900"}`}>Sign in to continue</h2>
-        <p className={`text-xs mb-5 ${dark ? "text-stone-500" : "text-stone-400"}`}>
-          Create a free account to get 3 generations.
+
+        {/* Logo */}
+        <div className="flex items-center justify-center mb-5">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-violet-800 flex items-center justify-center shadow-md">
+            <svg width="18" height="18" viewBox="0 0 14 14" fill="none">
+              <path d="M2 10L5 4L8 8L10 6L12 10H2Z" fill="white" fillOpacity="0.9" />
+            </svg>
+          </div>
+        </div>
+
+        <h2 className={`text-base font-bold mb-1 text-center ${dark ? "text-stone-50" : "text-stone-900"}`}>
+          Sign in to continue
+        </h2>
+        <p className={`text-xs mb-6 text-center ${dark ? "text-stone-500" : "text-stone-400"}`}>
+          Get 3 free generations — no credit card needed
         </p>
-        {/* Mock Google login */}
+
+        {/* Error message */}
+        {authError && (
+          <div className={`mb-4 px-3 py-2.5 rounded-lg border text-xs
+            ${dark ? "bg-red-900/30 border-red-700 text-red-400" : "bg-red-50 border-red-200 text-red-600"}`}>
+            {authError}
+          </div>
+        )}
+
+        {/* Google Sign In button */}
         <button
-          onClick={() => onLogin({ name: "Rahul Sharma", email: "rahul@gmail.com", isPro: false })}
-          className={`w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl border text-sm font-medium transition-all duration-150 mb-3
-            ${dark ? "border-stone-700 bg-stone-800 text-stone-200 hover:bg-stone-700" : "border-stone-300 bg-white text-stone-700 hover:bg-stone-50"}`}
+          onClick={onLoginSuccess}
+          disabled={authLoading}
+          className={`w-full flex items-center justify-center gap-2.5 py-3 rounded-xl border text-sm font-medium transition-all duration-150
+            ${authLoading ? "opacity-60 cursor-not-allowed" : ""}
+            ${dark
+              ? "border-stone-700 bg-stone-800 text-stone-200 hover:bg-stone-700"
+              : "border-stone-300 bg-white text-stone-700 hover:bg-stone-50 shadow-sm"
+            }`}
         >
-          <svg className="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-          Continue with Google
+          {authLoading ? (
+            <SpinnerIcon />
+          ) : (
+            <svg className="w-4 h-4" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+          )}
+          {authLoading ? "Signing in..." : "Continue with Google"}
         </button>
-        <button
-          onClick={() => onLogin({ name: "Demo User", email: "demo@example.com", isPro: true })}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 transition-colors duration-150"
-        >
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          Try as Pro (demo)
-        </button>
+
         <p className={`text-xs text-center mt-4 ${dark ? "text-stone-600" : "text-stone-400"}`}>
           By signing in you agree to our Terms & Privacy Policy
         </p>
@@ -275,58 +358,114 @@ function LoginModal({ dark, onClose, onLogin }) {
 }
 
 // ─── App ──────────────────────────────────────────────────────────────────────
-const FREE_CREDITS = 3;
-
 export default function App() {
-  const [dark, setDark] = useState(false);
-  const [user, setUser] = useState(null);
-  const [credits, setCredits] = useState(FREE_CREDITS);
-  const [showSubscription, setShowSubscription] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
+  const [dark, setDark]                   = useState(false);
 
+  // Auth state
+  const [firebaseUser, setFirebaseUser]   = useState(null);  // raw Firebase user
+  const [userData, setUserData]           = useState(null);  // Firestore doc
+  const [authLoading, setAuthLoading]     = useState(true);  // true while checking session
+  const [authError, setAuthError]         = useState("");
+  const [showLogin, setShowLogin]         = useState(false);
+  const [showSubscription, setShowSubscription] = useState(false);
+
+  // App state
   const [form, setForm] = useState({
     projectName: "", techStack: "", description: "", contribution: "", challenge: "",
   });
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
+  const [loading, setLoading]   = useState(false);
+  const [result, setResult]     = useState(null);
 
-  const set = (key) => (e) => setForm((p) => ({ ...p, [key]: e.target.value }));
-  const isValid = Object.values(form).every((v) => v.trim() !== "");
-  const isPro = user?.isPro === true;
+  // ── Listen to Firebase auth state on mount ──────────────────────────────────
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      if (fbUser) {
+        setFirebaseUser(fbUser);
+        const data = await getUserData(fbUser);
+        setUserData(data);
+      } else {
+        setFirebaseUser(null);
+        setUserData(null);
+      }
+      setAuthLoading(false);
+    });
+    return () => unsubscribe(); // cleanup on unmount
+  }, []);
+
+  // ── Google Sign In ──────────────────────────────────────────────────────────
+  const handleGoogleLogin = async () => {
+    setAuthError("");
+    setAuthLoading(true);
+    try {
+      const result     = await signInWithPopup(auth, provider);
+      const fbUser     = result.user;
+      setFirebaseUser(fbUser);
+      const data       = await getUserData(fbUser);
+      setUserData(data);
+      setShowLogin(false);
+    } catch (err) {
+      // Common error codes:
+      // auth/popup-closed-by-user  — user closed the popup
+      // auth/popup-blocked         — browser blocked the popup
+      // auth/cancelled-popup-request
+      if (err.code !== "auth/popup-closed-by-user" && err.code !== "auth/cancelled-popup-request") {
+        setAuthError("Sign in failed. Please try again.");
+        console.error("Google sign-in error:", err);
+      }
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // ── Sign Out ────────────────────────────────────────────────────────────────
+  const handleLogout = async () => {
+    await signOut(auth);
+    setFirebaseUser(null);
+    setUserData(null);
+    setResult(null);
+  };
+
+  // ── Upgrade plan (Razorpay hook-in point) ───────────────────────────────────
+  const handleSelectPlan = (planId) => {
+    // TODO: Initialise Razorpay here with planId
+    // On successful payment, call Firestore to update user plan:
+    //   await updateDoc(doc(db, "users", firebaseUser.uid), { plan: planId, credits: 999999 })
+    //   then re-fetch userData
+    alert(`Razorpay integration point — planId: "${planId}"\nUpdate user's Firestore doc to plan: "${planId}" after successful payment.`);
+    setShowSubscription(false);
+  };
+
+  // ── Derived state ────────────────────────────────────────────────────────────
+  const isPro      = userData?.plan && userData.plan !== "free";
+  const credits    = userData?.credits ?? 0;
   const canGenerate = isPro || credits > 0;
 
-  const handleGenerate = () => {
+  const set        = (key) => (e) => setForm((p) => ({ ...p, [key]: e.target.value }));
+  const isValid    = Object.values(form).every((v) => v.trim() !== "");
+
+  // ── Generate ─────────────────────────────────────────────────────────────────
+  const handleGenerate = async () => {
     if (!isValid || loading) return;
-    if (!user) { setShowLogin(true); return; }
-    if (!canGenerate) { setShowSubscription(true); return; }
+    if (!firebaseUser) { setShowLogin(true); return; }
+    if (!canGenerate)  { setShowSubscription(true); return; }
 
     setLoading(true);
     setResult(null);
-    if (!isPro) setCredits((c) => c - 1);
+
+    // Deduct credit from Firestore for free users
+    if (!isPro) {
+      await spendCredit(firebaseUser.uid);
+      setUserData((prev) => ({ ...prev, credits: prev.credits - 1 }));
+    }
+
+    // TODO: Replace this timeout with your real OpenAI API call
     setTimeout(() => {
       setResult(generateDummyResult(form));
       setLoading(false);
     }, 2200);
   };
 
-  const handleLogin = (userData) => {
-    setUser(userData);
-    setShowLogin(false);
-    if (userData.isPro) setCredits(Infinity);
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    setCredits(FREE_CREDITS);
-    setResult(null);
-  };
-
-  const handleSelectPlan = (planId) => {
-    // Hook up Razorpay here
-    alert(`Razorpay integration: selected plan "${planId}". Hook up payment here.`);
-    setShowSubscription(false);
-  };
-
+  // ── Input / label classes ────────────────────────────────────────────────────
   const inputCls = `w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all duration-150 resize-none leading-relaxed
     ${dark
       ? "bg-stone-800 border-stone-700 text-stone-100 placeholder:text-stone-500 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/20 hover:border-stone-600"
@@ -334,13 +473,29 @@ export default function App() {
     }`;
   const labelCls = `text-xs font-semibold uppercase tracking-wide ${dark ? "text-stone-400" : "text-stone-500"}`;
 
-  const generateBtnLabel = !user
+  const generateBtnLabel = !firebaseUser
     ? "Sign in to Generate"
     : !canGenerate
       ? "No Credits — Upgrade to Pro"
       : loading
         ? "Generating..."
         : "Generate Explanation";
+
+  // ── Auth loading screen (brief flash while Firebase checks session) ──────────
+  if (authLoading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${dark ? "bg-stone-950" : "bg-[#fafaf9]"}`}>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-violet-800 flex items-center justify-center shadow-md animate-pulse">
+            <svg width="18" height="18" viewBox="0 0 14 14" fill="none">
+              <path d="M2 10L5 4L8 8L10 6L12 10H2Z" fill="white" fillOpacity="0.9" />
+            </svg>
+          </div>
+          <p className={`text-xs ${dark ? "text-stone-500" : "text-stone-400"}`}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-stone-950" : "bg-[#fafaf9]"}`}>
@@ -355,7 +510,11 @@ export default function App() {
       <Header
         dark={dark}
         setDark={setDark}
-        user={user}
+        user={firebaseUser ? {
+          name:  firebaseUser.displayName,
+          email: firebaseUser.email,
+          isPro,
+        } : null}
         onLogin={() => setShowLogin(true)}
         onLogout={handleLogout}
         credits={isPro ? null : credits}
@@ -380,7 +539,7 @@ export default function App() {
         </div>
 
         {/* Credits banner */}
-        {user && (
+        {firebaseUser && (
           <CreditsBanner
             credits={isPro ? Infinity : credits}
             dark={dark}
@@ -420,27 +579,30 @@ export default function App() {
               <label className={labelCls}>Biggest Challenge</label>
               <textarea rows={3} className={inputCls} placeholder="What was the hardest problem you faced? How did you solve it?" value={form.challenge} onChange={set("challenge")} />
             </div>
+
             <div className={`border-t pt-1 ${dark ? "border-stone-800" : "border-stone-100"}`} />
+
             <button
               onClick={handleGenerate}
-              disabled={loading || (!isPro && !canGenerate && user)}
+              disabled={loading || (firebaseUser && !canGenerate)}
               className={`w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 select-none
-                ${(loading || (!isPro && !canGenerate && user))
+                ${loading || (firebaseUser && !canGenerate)
                   ? dark ? "bg-stone-800 text-stone-600 cursor-not-allowed" : "bg-stone-200 text-stone-400 cursor-not-allowed"
-                  : !user || !isValid
-                    ? dark ? "bg-stone-800 text-stone-500 hover:bg-stone-700 hover:text-stone-300 border border-stone-700" : "bg-stone-100 text-stone-500 hover:bg-stone-200 hover:text-stone-700 border border-stone-200"
+                  : !firebaseUser || !isValid
+                    ? dark ? "bg-stone-800 text-stone-400 hover:bg-stone-700 border border-stone-700" : "bg-stone-100 text-stone-500 hover:bg-stone-200 border border-stone-200"
                     : "bg-violet-600 text-white hover:bg-violet-700 active:scale-[0.99] shadow-md shadow-violet-900/30"
                 }`}
             >
               {loading && <SpinnerIcon />}
               {generateBtnLabel}
             </button>
-            {!isValid && user && (
+
+            {!isValid && firebaseUser && (
               <p className={`text-center text-xs ${dark ? "text-stone-600" : "text-stone-400"}`}>
                 Fill in all fields to unlock generation
               </p>
             )}
-            {!user && (
+            {!firebaseUser && (
               <p className={`text-center text-xs ${dark ? "text-stone-600" : "text-stone-400"}`}>
                 Free plan includes <strong className={dark ? "text-stone-400" : "text-stone-600"}>3 generations</strong> — no credit card needed
               </p>
@@ -475,11 +637,11 @@ export default function App() {
                 {ALL_CARDS.map((title) => {
                   const locked = !isPro && !FREE_UNLOCKED.includes(title);
                   const contentMap = {
-                    "Elevator Pitch": result.elevatorPitch,
-                    "Detailed Explanation": result.detailedExplanation,
-                    "Tech Stack Justification": result.techStackJustification,
-                    "Challenges & Solutions": result.challengesAndSolutions,
-                    "Interview Q&A": result.interviewQA,
+                    "Elevator Pitch":            result.elevatorPitch,
+                    "Detailed Explanation":      result.detailedExplanation,
+                    "Tech Stack Justification":  result.techStackJustification,
+                    "Challenges & Solutions":    result.challengesAndSolutions,
+                    "Interview Q&A":             result.interviewQA,
                   };
                   return (
                     <ResultCard
@@ -493,7 +655,7 @@ export default function App() {
                   );
                 })}
                 {!isPro && (
-                  <div className={`rounded-2xl border p-5 text-center transition-colors duration-300
+                  <div className={`rounded-2xl border p-5 text-center
                     ${dark ? "bg-violet-950/40 border-violet-800" : "bg-violet-50 border-violet-200"}`}>
                     <p className={`text-sm font-semibold mb-1 ${dark ? "text-violet-300" : "text-violet-700"}`}>
                       Unlock 3 more sections with Pro
@@ -515,7 +677,7 @@ export default function App() {
         )}
       </main>
 
-      <footer className={`relative z-10 border-t mt-16 transition-colors duration-300 ${dark ? "border-stone-800" : "border-stone-200/80"}`}>
+      <footer className={`relative z-10 border-t mt-16 ${dark ? "border-stone-800" : "border-stone-200/80"}`}>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between">
           <span className={`text-xs ${dark ? "text-stone-600" : "text-stone-400"}`}>© 2025 ExplainMyProject</span>
           <span className={`text-xs ${dark ? "text-stone-600" : "text-stone-400"}`}>Built for engineers, by engineers</span>
@@ -528,14 +690,16 @@ export default function App() {
           dark={dark}
           onClose={() => setShowSubscription(false)}
           onSelectPlan={handleSelectPlan}
-          currentPlan={isPro ? "pro_monthly" : "free"}
+          currentPlan={isPro ? userData.plan : "free"}
         />
       )}
       {showLogin && (
         <LoginModal
           dark={dark}
           onClose={() => setShowLogin(false)}
-          onLogin={handleLogin}
+          onLoginSuccess={handleGoogleLogin}
+          authLoading={authLoading}
+          authError={authError}
         />
       )}
     </div>
