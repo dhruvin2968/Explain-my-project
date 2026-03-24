@@ -444,26 +444,52 @@ export default function App() {
   const isValid    = Object.values(form).every((v) => v.trim() !== "");
 
   // ── Generate ─────────────────────────────────────────────────────────────────
+  // const handleGenerate = async () => {
+  //   if (!isValid || loading) return;
+  //   if (!firebaseUser) { setShowLogin(true); return; }
+  //   if (!canGenerate)  { setShowSubscription(true); return; }
+
+  //   setLoading(true);
+  //   setResult(null);
+
+  //   // Deduct credit from Firestore for free users
+  //   if (!isPro) {
+  //     await spendCredit(firebaseUser.uid);
+  //     setUserData((prev) => ({ ...prev, credits: prev.credits - 1 }));
+  //   }
+
+  //   // TODO: Replace this timeout with your real OpenAI API call
+  //   setTimeout(() => {
+  //     setResult(generateDummyResult(form));
+  //     setLoading(false);
+  //   }, 2200);
+  // };
   const handleGenerate = async () => {
-    if (!isValid || loading) return;
-    if (!firebaseUser) { setShowLogin(true); return; }
-    if (!canGenerate)  { setShowSubscription(true); return; }
+  setLoading(true);
 
-    setLoading(true);
-    setResult(null);
+  const res = await fetch("https://prepnpitch-backend.onrender.com/generate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ formData: form })
+  });
 
-    // Deduct credit from Firestore for free users
-    if (!isPro) {
-      await spendCredit(firebaseUser.uid);
-      setUserData((prev) => ({ ...prev, credits: prev.credits - 1 }));
-    }
+  const data = await res.json();
 
-    // TODO: Replace this timeout with your real OpenAI API call
-    setTimeout(() => {
-      setResult(generateDummyResult(form));
-      setLoading(false);
-    }, 2200);
-  };
+  // setResult({
+  //   elevatorPitch: data.output,
+  //   detailedExplanation: data.output,
+  //   techStackJustification: data.output,
+  //   challengesAndSolutions: data.output,
+  //   interviewQA: [
+  //     { q: "Sample Q?", a: data.output }
+  //   ]
+  // });
+  setResult(data);
+
+  setLoading(false);
+};
 
   // ── Input / label classes ────────────────────────────────────────────────────
   const inputCls = `w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all duration-150 resize-none leading-relaxed
