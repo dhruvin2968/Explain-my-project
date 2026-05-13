@@ -661,7 +661,8 @@ export default function App() {
                   </span>
                 </div>
                 {ALL_CARDS.map((title) => {
-                  const locked = !isPro && !FREE_UNLOCKED.includes(title);
+                  //const locked = !isPro && !FREE_UNLOCKED.includes(title);
+                  const locked=false;
                   const contentMap = {
                     "Elevator Pitch":            result.elevatorPitch,
                     "Detailed Explanation":      result.detailedExplanation,
