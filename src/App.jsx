@@ -18,6 +18,7 @@ import {
 import Header from "./components/Header";
 import Subscription from "./components/Subscription";
 import { getAnalytics } from "firebase/analytics";
+import { Analytics } from "@vercel/analytics/react";
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -392,7 +393,7 @@ export default function App() {
     return () => unsubscribe(); // cleanup on unmount
   }, []);
 
-  // ── Google Sign In ──────────────────────────────────────────────────────────
+  // ── Google Sign In ───────���──────────────────────────────────────────────────
   const handleGoogleLogin = async () => {
     setAuthError("");
     setAuthLoading(true);
@@ -729,6 +730,7 @@ export default function App() {
           authError={authError}
         />
       )}
+      <Analytics />
     </div>
   );
 }
