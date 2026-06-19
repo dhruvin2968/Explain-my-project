@@ -161,7 +161,7 @@ export default function JobMatch({ dark, setDark, user, onLogin, onLogout, credi
     setLoading(true);
 
     try {
-      const res = await fetch(`http://localhost:5000/job-match`, {
+      const res = await fetch(`https://prepnpitch-backend.onrender.com/job-match`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resumeText: resume, jobDescription: jd }),

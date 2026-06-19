@@ -18,7 +18,8 @@ export default function App() {
   const [user, setUser] = useState(null); 
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-stone-950" : "bg-[#fafaf9]"}`}>
+    <BrowserRouter>
+      <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-stone-950" : "bg-[#fafaf9]"}`}>
       {/* Ambient blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className={`absolute -top-40 -right-40 w-96 h-96 rounded-full blur-3xl transition-colors duration-300 ${dark ? "bg-violet-900/20" : "bg-violet-100/60"}`} />
@@ -202,5 +203,5 @@ export default function App() {
         <Footer dark={dark} />
       </div>
     </BrowserRouter>
-  );
+);
 }

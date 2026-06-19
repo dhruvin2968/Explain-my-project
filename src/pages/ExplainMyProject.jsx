@@ -447,7 +447,7 @@ export default function ExplainMyProject() {
     }
 
     try {
-      const res  = await fetch("http://localhost:5000/generate", {
+      const res  = await fetch("https://prepnpitch-backend.onrender.com/generate", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ formData: form }),
