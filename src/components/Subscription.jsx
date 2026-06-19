@@ -8,7 +8,7 @@ const PLANS = [
     price: "₹0",
     period: "",
     tagline: "Get started, no card needed",
-    credits: "3 lifetime generations",
+    credits: "5 lifetime generations",
     features: [
       "3 total project explanations",
       "Elevator Pitch only",
@@ -28,7 +28,7 @@ const PLANS = [
   {
     id: "pro_monthly",
     name: "Pro",
-    price: "₹149",
+    price: "₹99",
     period: "/ month",
     tagline: "For active job seekers",
     credits: "Unlimited generations",
