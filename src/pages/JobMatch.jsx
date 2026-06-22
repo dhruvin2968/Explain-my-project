@@ -1,6 +1,4 @@
 import { useState } from "react";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const SpinnerIcon = () => (
@@ -186,20 +184,13 @@ export default function JobMatch({ dark, setDark, user, onLogin, onLogout, credi
   const labelCls = `text-xs font-semibold uppercase tracking-wide ${dark ? "text-stone-400" : "text-stone-500"}`;
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-stone-950" : "bg-[#fafaf9]"}`}>
+    <div style={{ minHeight: "100vh", background: dark ? "#050505" : "#f5f5f0", transition: "background 0.3s" }}>
 
       {/* Ambient */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute -top-40 -right-40 w-96 h-96 rounded-full blur-3xl ${dark ? "bg-purple-900/20" : "bg-purple-100/60"}`} />
-        <div className={`absolute bottom-0 -left-32 w-80 h-80 rounded-full blur-3xl ${dark ? "bg-sky-900/20" : "bg-sky-100/50"}`} />
+        <div style={{ position: "absolute", top: "-10rem", right: "-10rem", width: "24rem", height: "24rem", borderRadius: "50%", filter: "blur(80px)", background: dark ? "rgba(167,139,250,0.07)" : "rgba(167,139,250,0.12)" }} />
+        <div style={{ position: "absolute", bottom: 0, left: "-8rem", width: "20rem", height: "20rem", borderRadius: "50%", filter: "blur(80px)", background: dark ? "rgba(14,165,233,0.06)" : "rgba(14,165,233,0.1)" }} />
       </div>
-
-      <Header
-        dark={dark} setDark={setDark}
-        user={user} onLogin={onLogin} onLogout={onLogout}
-        credits={credits} onSubscribe={onSubscribe}
-      />
-
       <main className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-12">
 
         {/* Hero */}
@@ -387,8 +378,6 @@ export default function JobMatch({ dark, setDark, user, onLogin, onLogout, credi
           </div>
         )}
       </main>
-
-      <Footer dark={dark} />
     </div>
   );
 }

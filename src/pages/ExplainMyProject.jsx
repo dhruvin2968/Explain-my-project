@@ -16,8 +16,6 @@ import {
   increment,
 } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 import Subscription from "../components/Subscription";
 import Payment from "../components/Payment";
 
@@ -265,11 +263,11 @@ function SkeletonCard({ dark }) {
 function CreditsBanner({ credits, dark, onUpgrade, isPro }) {
   if (isPro) return null;
   return (
-    <div className={`mb-6 flex items-center justify-between gap-3 px-4 py-3 rounded-xl border text-sm
-      ${credits > 0
-        ? dark ? "bg-violet-900/20 border-violet-800 text-violet-300" : "bg-violet-50 border-violet-200 text-violet-700"
-        : dark ? "bg-red-900/20 border-red-800 text-red-300" : "bg-red-50 border-red-200 text-red-600"
-      }`}>
+    <div className={`mb-6 flex items-center justify-between gap-3 px-4 py-3 rounded-xl border text-sm`}
+      style={credits > 0
+        ? { background: dark ? "rgba(245,166,35,0.08)" : "rgba(245,166,35,0.1)", borderColor: dark ? "rgba(245,166,35,0.35)" : "rgba(245,166,35,0.45)", color: "#F5A623" }
+        : { background: dark ? "rgba(239,68,68,0.12)" : "rgba(254,242,242,1)", borderColor: dark ? "#7f1d1d" : "#fecaca", color: dark ? "#f87171" : "#dc2626" }
+      }>
       <div className="flex items-center gap-2">
         <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
@@ -282,7 +280,7 @@ function CreditsBanner({ credits, dark, onUpgrade, isPro }) {
       <button
         onClick={onUpgrade}
         className={`shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors duration-150
-          ${credits > 0 ? "bg-violet-600 text-white hover:bg-violet-700" : "bg-red-600 text-white hover:bg-red-700"}`}
+          ${credits > 0 ? "bg-[#F5A623] text-black hover:bg-[#e8961a]" : "bg-red-600 text-white hover:bg-red-700"}`}
       >
         Upgrade
       </button>
@@ -296,10 +294,10 @@ function LoginModal({ dark, onClose, onLoginSuccess, authLoading, authError }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className={`relative w-full max-w-sm rounded-2xl border p-6 shadow-2xl transition-colors duration-300
-        ${dark ? "bg-stone-950 border-stone-800" : "bg-white border-stone-200"}`}>
+        ${dark ? "bg-[#0d0d0d] border-[#1a1a1a]" : "bg-white border-stone-200"}`}>
 
         <div className="flex items-center justify-center mb-5">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-violet-800 flex items-center justify-center shadow-md">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md" style={{ background: "#F5A623" }}>
             <svg width="18" height="18" viewBox="0 0 14 14" fill="none">
               <path d="M2 10L5 4L8 8L10 6L12 10H2Z" fill="white" fillOpacity="0.9" />
             </svg>
@@ -352,8 +350,7 @@ function LoginModal({ dark, onClose, onLoginSuccess, authLoading, authError }) {
 }
 
 // ─── ExplainMyProject (main page) ─────────────────────────────────────────────
-export default function ExplainMyProject() {
-  const [dark, setDark] = useState(false);
+export default function ExplainMyProject({ dark }) {
 
   // Auth state
   const [firebaseUser, setFirebaseUser] = useState(null);
@@ -465,8 +462,8 @@ export default function ExplainMyProject() {
   // ── Input / label classes ────────────────────────────────────────────────────
   const inputCls = `w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all duration-150 resize-none leading-relaxed
     ${dark
-      ? "bg-stone-800 border-stone-700 text-stone-100 placeholder:text-stone-500 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/20 hover:border-stone-600"
-      : "bg-stone-50 border-stone-200 text-stone-800 placeholder:text-stone-400 focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-100 hover:border-stone-300"
+      ? "bg-[#111] border-[#222] text-stone-100 placeholder:text-stone-500 hover:border-[#333]"
+      : "bg-stone-50 border-stone-200 text-stone-800 placeholder:text-stone-400 focus:bg-white hover:border-stone-300"
     }`;
   const labelCls = `text-xs font-semibold uppercase tracking-wide ${dark ? "text-stone-400" : "text-stone-500"}`;
 
@@ -481,7 +478,7 @@ export default function ExplainMyProject() {
   // ── Auth loading screen ──────────────────────────────────────────────────────
   if (authLoading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${dark ? "bg-stone-950" : "bg-[#fafaf9]"}`}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: dark ? "#050505" : "#f5f5f0" }}>
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-violet-800 flex items-center justify-center shadow-md animate-pulse">
             <svg width="18" height="18" viewBox="0 0 14 14" fill="none">
@@ -496,50 +493,35 @@ export default function ExplainMyProject() {
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-stone-950" : "bg-[#fafaf9]"}`}>
+    <div style={{ minHeight: "100vh", background: dark ? "#050505" : "#f5f5f0", transition: "background 0.3s" }}>
 
       {/* Ambient blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute -top-40 -right-40 w-96 h-96 rounded-full blur-3xl transition-colors duration-300 ${dark ? "bg-violet-900/20" : "bg-violet-100/60"}`} />
-        <div className={`absolute top-1/2 -left-32 w-80 h-80 rounded-full blur-3xl transition-colors duration-300 ${dark ? "bg-sky-900/20" : "bg-sky-100/50"}`} />
-        <div className={`absolute bottom-0 right-1/3 w-64 h-64 rounded-full blur-3xl transition-colors duration-300 ${dark ? "bg-amber-900/10" : "bg-amber-50/70"}`} />
+        <div style={{ position: "absolute", top: "-10rem", right: "-10rem", width: "24rem", height: "24rem", borderRadius: "50%", filter: "blur(80px)", background: dark ? "rgba(245,166,35,0.07)" : "rgba(245,166,35,0.12)", transition: "background 0.3s" }} />
+        <div style={{ position: "absolute", top: "50%", left: "-8rem", width: "20rem", height: "20rem", borderRadius: "50%", filter: "blur(80px)", background: dark ? "rgba(78,205,196,0.06)" : "rgba(78,205,196,0.10)" }} />
+        <div style={{ position: "absolute", bottom: 0, right: "33%", width: "16rem", height: "16rem", borderRadius: "50%", filter: "blur(80px)", background: dark ? "rgba(245,166,35,0.05)" : "rgba(245,166,35,0.08)" }} />
       </div>
 
-      {/* ── Header ── */}
-      <Header
-        dark={dark}
-        setDark={setDark}
-        user={firebaseUser ? {
-          name:  firebaseUser.displayName,
-          email: firebaseUser.email,
-          isPro,
-        } : null}
-        onLogin={() => setShowLogin(true)}
-        onLogout={handleLogout}
-        credits={isPro ? null : credits}
-        onSubscribe={() => setShowSubscription(true)}
-      />
-
-      {/* ── Main ── */}
+      {/* ── Main ── */}}
       <main className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-12">
 
         {/* Hero */}
         <div className="mb-10 text-center">
-          <div className={`inline-flex items-center gap-1.5 border text-xs font-medium px-3 py-1.5 rounded-full mb-5
-            ${dark ? "bg-violet-900/30 border-violet-700 text-violet-400" : "bg-violet-50 border-violet-200/70 text-violet-700"}`}>
+          <div className={`inline-flex items-center gap-1.5 border text-xs font-medium px-3 py-1.5 rounded-full mb-5`}
+            style={{ background: dark ? "rgba(245,166,35,0.1)" : "rgba(245,166,35,0.12)", borderColor: dark ? "rgba(245,166,35,0.4)" : "rgba(245,166,35,0.5)", color: "#F5A623" }}>
             <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
             AI-powered · For job seekers & developers
           </div>
-          <h1 className={`text-3xl sm:text-4xl font-bold tracking-tight leading-tight mb-3 ${dark ? "text-stone-50" : "text-stone-900"}`}>
+          <h1 className={`text-3xl sm:text-4xl font-bold tracking-tight leading-tight mb-3 ${dark ? "text-stone-50" : "text-stone-900"}`}
+            style={{ fontFamily: "'Syne', sans-serif" }}>
             Explain Your Project<br />
-            <span className="text-violet-500">Like a Pro</span>
+            <span style={{ color: "#F5A623" }}>Like a Pro</span>
           </h1>
           <p className={`text-base max-w-md mx-auto leading-relaxed ${dark ? "text-stone-400" : "text-stone-500"}`}>
             Turn your project into interview-ready answers in seconds.
           </p>
         </div>
 
-        {/* Credits banner */}
         {firebaseUser && (
           <CreditsBanner
             credits={isPro ? Infinity : credits}
@@ -550,8 +532,8 @@ export default function ExplainMyProject() {
         )}
 
         {/* Form Card */}
-        <div className={`border rounded-2xl shadow-sm overflow-hidden transition-colors duration-300
-          ${dark ? "bg-stone-900 border-stone-800" : "bg-white border-stone-200"}`}>
+    <div className={`border rounded-2xl shadow-sm overflow-hidden transition-colors duration-300`}
+          style={{ background: dark ? "#0d0d0d" : "#ffffff", borderColor: dark ? "#1a1a1a" : "#e5e5e5" }}>
           <div className={`px-6 sm:px-8 pt-6 pb-3 border-b ${dark ? "border-stone-800" : "border-stone-100"}`}>
             <h2 className={`text-xs font-semibold uppercase tracking-widest ${dark ? "text-stone-500" : "text-stone-400"}`}>
               Project Details
@@ -591,7 +573,7 @@ export default function ExplainMyProject() {
                   ? dark ? "bg-stone-800 text-stone-600 cursor-not-allowed" : "bg-stone-200 text-stone-400 cursor-not-allowed"
                   : !firebaseUser || !isValid
                     ? dark ? "bg-stone-800 text-stone-400 hover:bg-stone-700 border border-stone-700" : "bg-stone-100 text-stone-500 hover:bg-stone-200 border border-stone-200"
-                    : "bg-violet-600 text-white hover:bg-violet-700 active:scale-[0.99] shadow-md shadow-violet-900/30"
+                    : "bg-[#F5A623] text-black hover:bg-[#e8961a] active:scale-[0.99] shadow-md"
                 }`}
             >
               {loading && <SpinnerIcon />}
@@ -657,8 +639,8 @@ export default function ExplainMyProject() {
                 })}
                 {!isPro && (
                   <div className={`rounded-2xl border p-5 text-center
-                    ${dark ? "bg-violet-950/40 border-violet-800" : "bg-violet-50 border-violet-200"}`}>
-                    <p className={`text-sm font-semibold mb-1 ${dark ? "text-violet-300" : "text-violet-700"}`}>
+                    ${dark ? "bg-[#F5A623]/10 border-[#F5A623]/40" : "bg-[#F5A623]/10 border-[#F5A623]/40"}`} style={{ color: "#F5A623" }}>
+                    <p className={`text-sm font-semibold mb-1`} style={{ color: "#F5A623" }}>
                       Unlock all sections with Pro
                     </p>
                     <p className={`text-xs mb-3 ${dark ? "text-stone-500" : "text-stone-400"}`}>
@@ -666,7 +648,10 @@ export default function ExplainMyProject() {
                     </p>
                     <button
                       onClick={() => setShowSubscription(true)}
-                      className="px-5 py-2 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-700 transition-colors duration-150 shadow-md shadow-violet-900/30"
+                      className="px-5 py-2 text-black text-sm font-semibold rounded-xl transition-colors duration-150"
+                      style={{ background: "#F5A623" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#e8961a"}
+                      onMouseLeave={e => e.currentTarget.style.background = "#F5A623"}
                     >
                       Upgrade to Pro — ₹99/mo
                     </button>
