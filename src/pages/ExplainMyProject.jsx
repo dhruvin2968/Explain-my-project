@@ -502,7 +502,7 @@ export default function ExplainMyProject({ dark }) {
         <div style={{ position: "absolute", bottom: 0, right: "33%", width: "16rem", height: "16rem", borderRadius: "50%", filter: "blur(80px)", background: dark ? "rgba(245,166,35,0.05)" : "rgba(245,166,35,0.08)" }} />
       </div>
 
-      {/* ── Main ── */}}
+      {/* ── Main ── */}
       <main className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-12">
 
         {/* Hero */}

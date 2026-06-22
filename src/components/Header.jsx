@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 const NAV_ITEMS = [
-  { id: "explain", label: "ExplainMyProject" },
-  { id: "interview", label: "Interview Prep" },
+  { id: "explain", label: "PitchMyProject" },
   { id: "resume", label: "Resume Checker" },
-  { id: "jobmatch", label: "Job Match" },
+  { id: "jobmatch", label: "JD Match" },
+  { id: "interview", label: "Mock Interview" },
 ];
 
 // ─── Icons ────────────────────────────────────────────────────────────────────

@@ -73,7 +73,7 @@ export default function InterviewPrep({ dark }) {
         {/* Badge */}
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, border: `1px solid rgba(245,166,35,0.4)`, borderRadius: 99, padding: "5px 14px", marginBottom: 32, fontSize: 11, color: "#F5A623", fontFamily: "'JetBrains Mono', monospace", background: "rgba(245,166,35,0.08)" }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#F5A623", display: "inline-block", animation: "blink 1.2s infinite" }} />
-          02 — Interview Prep · Coming Soon
+          02 — Mock Interview · Coming Soon
         </div>
 
         <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: "clamp(30px, 5vw, 58px)", lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: 20, color: textMain }}>

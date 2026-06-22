@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 const NAV_ITEMS = [
   { id: "explain", label: "ExplainMyProject" },
-  { id: "interview", label: "Interview Prep" },
+  { id: "interview", label: "Mock Interview" },
   { id: "resume", label: "Resume Checker" },
-  { id: "jobmatch", label: "Job Match" },
+  { id: "jobmatch", label: "JD Match" },
 ];
 const FEATURES = [
   {
@@ -32,7 +32,7 @@ const FEATURES = [
   },
   {
     id: "interview",
-    tag: "02 — Interview Prep",
+    tag: "02 — Mock Interview",
     headline: "Mock interviews that\nactually stress-test you.",
     body: "AI interviewer asks questions specific to your project, your stack, and the company's engineering culture. Voice-enabled. Gives brutal, honest feedback after each answer.",
     bullets: [
@@ -269,7 +269,7 @@ function FeatureSection({ feature, index }) {
 
 export default function LandingPage({ dark }) {
   const navigate = useNavigate();
-
+  const textMain = dark ? "#f0f0f0" : "#0a0a0a";
   const scrollTo = (id) => {
     const routeMap = {
       explain:   "/explain",
@@ -358,7 +358,8 @@ export default function LandingPage({ dark }) {
             lineHeight: 1.05,
             letterSpacing: "-0.03em",
             marginBottom: "28px",
-            color: "#f0f0f0",
+            
+            color: textMain,
             maxWidth: 800,
           }}>
             Stop winging your{" "}
