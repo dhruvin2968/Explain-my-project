@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 const NAV_ITEMS = [
   { id: "explain", label: "ExplainMyProject" },
   { id: "interview", label: "Interview Prep" },
@@ -176,34 +176,23 @@ function UserDropdown({ user, dark, onLogout, onSubscribe, credits }) {
  */
 export default function Header({ dark, setDark, user, onLogin, onLogout, credits, onSubscribe }) {
   const [scrolled, setScrolled] = useState(false);
-  const [activeNav, setActiveNav] = useState(null);
-  
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const ROUTE_MAP = {
+    explain:   "/explain",
+    interview: "/interviewprep",
+    resume:    "/resumecheck",
+    jobmatch:  "/jobmatch",
+  };
+
+  const navTo = (id) => navigate(ROUTE_MAP[id]);
+
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-      
-      // Update active nav based on scroll position
-      const sections = NAV_ITEMS.map(n => document.getElementById(n.id));
-      sections.forEach(s => {
-        if (!s) return;
-        const rect = s.getBoundingClientRect();
-        if (rect.top <= 120 && rect.bottom >= 120) setActiveNav(s.id);
-      });
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const navigate = useNavigate();
-const scrollTo = (id) => {
-  const routeMap = {
-    explain:       "/explain",
-    interview:     "/interviewprep",
-    resume:        "/resumecheck",
-    jobmatch:      "/jobmatch",
-  };
-  navigate(routeMap[id]);
-};
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-[100] h-[64px] px-4 sm:px-8 transition-all duration-300
@@ -219,7 +208,7 @@ const scrollTo = (id) => {
         {/* 1. Logo */}
         <div 
           className="flex items-center gap-2.5 flex-shrink-0 cursor-pointer" 
-          onClick={() => scrollTo('top')}
+          onClick={() => navigate('/')}
         >
           <div 
             className="w-7 h-7 rounded-md flex items-center justify-center"
@@ -248,9 +237,9 @@ const scrollTo = (id) => {
             <button
               key={n.id}
               className="px-3 py-2 text-sm font-medium transition-colors rounded-md hover:bg-stone-800/20"
-              onClick={() => scrollTo(n.id)}
+              onClick={() => navTo(n.id)}
               style={{ 
-                color: activeNav === n.id ? "#F5A623" : (dark ? "#999" : "#666") 
+                color: ROUTE_MAP[n.id] === location.pathname ? "#F5A623" : (dark ? "#999" : "#666") 
               }}
             >
               {n.label}

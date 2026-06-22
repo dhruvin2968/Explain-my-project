@@ -1,7 +1,5 @@
 import { useState, useRef, useCallback } from "react";
 import * as pdfjsLib from "pdfjs-dist";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 
 // Required: set worker source in your main.jsx or index.js:
 // import * as pdfjsLib from "pdfjs-dist";
@@ -273,12 +271,12 @@ export default function ResumeChecker({ dark, setDark, user, onLogin, onLogout, 
     }`;
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-stone-950" : "bg-[#fafaf9]"}`}>
+    <div style={{ minHeight: "100vh", background: dark ? "#050505" : "#f5f5f0", transition: "background 0.3s" }}>
 
       {/* Ambient blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute -top-40 -right-40 w-96 h-96 rounded-full blur-3xl ${dark ? "bg-rose-900/20" : "bg-rose-100/60"}`} />
-        <div className={`absolute bottom-0 -left-32 w-80 h-80 rounded-full blur-3xl ${dark ? "bg-violet-900/20" : "bg-violet-100/50"}`} />
+        <div style={{ position: "absolute", top: "-10rem", right: "-10rem", width: "24rem", height: "24rem", borderRadius: "50%", filter: "blur(80px)", background: dark ? "rgba(239,68,68,0.07)" : "rgba(239,68,68,0.1)" }} />
+        <div style={{ position: "absolute", bottom: 0, left: "-8rem", width: "20rem", height: "20rem", borderRadius: "50%", filter: "blur(80px)", background: dark ? "rgba(167,139,250,0.06)" : "rgba(167,139,250,0.1)" }} />
       </div>
 
      

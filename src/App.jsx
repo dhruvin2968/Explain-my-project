@@ -21,7 +21,7 @@ export default function App() {
     // 1. Wrap everything in BrowserRouter
     <BrowserRouter>
       {/* 2. Flexbox layout to keep footer at the bottom */}
-      <div className={`flex flex-col min-h-screen ${dark ? 'bg-[#0a0a0a]' : 'bg-white'}`}>
+      <div className={`flex flex-col min-h-screen`} style={{ background: dark ? '#050505' : '#f5f5f0', transition: 'background 0.3s' }}>
         
         {/* 3. Header stays on all pages */}
         <Header 
@@ -35,10 +35,10 @@ export default function App() {
         <main className="flex-grow pt-[64px]"> {/* pt-[64px] offsets your fixed header */}
           <Routes>
             <Route path="/" element={<LandingPage dark={dark} />} />
-            <Route path="/explain" element={<ExplainMyProject />} />
-            <Route path="/interviewprep" element={<InterviewPrep />} />
-            <Route path="/resumecheck" element={<ResumeChecker />} />
-            <Route path="/jobmatch" element={<JobMatch />} />
+            <Route path="/explain" element={<ExplainMyProject dark={dark} />} />
+            <Route path="/interviewprep" element={<InterviewPrep dark={dark} />} />
+            <Route path="/resumecheck" element={<ResumeChecker dark={dark} setDark={setDark} />} />
+            <Route path="/jobmatch" element={<JobMatch dark={dark} setDark={setDark} />} />
 
             {/* Catch-all for 404 - Redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -267,39 +267,24 @@ function FeatureSection({ feature, index }) {
   );
 }
 
-export default function LandingPage() {
-  const [activeNav, setActiveNav] = useState(null);
-  const [scrolled, setScrolled] = useState(false);
+export default function LandingPage({ dark }) {
   const navigate = useNavigate();
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 40);
-      const sections = NAV_ITEMS.map(n => document.getElementById(n.id));
-      sections.forEach(s => {
-        if (!s) return;
-        const rect = s.getBoundingClientRect();
-        if (rect.top <= 120 && rect.bottom >= 120) setActiveNav(s.id);
-      });
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const scrollTo = (id) => {
-  const routeMap = {
-    explain:       "/explain",
-    interview:     "/interviewprep",
-    resume:        "/resumecheck",
-    jobmatch:      "/job",
+    const routeMap = {
+      explain:   "/explain",
+      interview: "/interviewprep",
+      resume:    "/resumecheck",
+      jobmatch:  "/job",
+    };
+    navigate(routeMap[id]);
   };
-  navigate(routeMap[id]);
-};
 
   return (
     <div style={{
-      background: "#050505",
+      background: dark ? "#050505" : "#f5f5f0",
       minHeight: "100vh",
-      color: "#f0f0f0",
+      color: dark ? "#f0f0f0" : "#0a0a0a",
       fontFamily: "'DM Sans', sans-serif",
     }}>
       <style>{`
