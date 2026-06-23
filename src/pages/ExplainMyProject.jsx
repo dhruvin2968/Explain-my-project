@@ -17,7 +17,6 @@ import {
 } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 import Subscription from "../components/Subscription";
-import Payment from "../components/Payment";
 
 // ─── Firebase Init ────────────────────────────────────────────────────────────
 const firebaseConfig = {
@@ -139,7 +138,7 @@ const CARD_CONFIG = {
   },
 };
 
-const FREE_UNLOCKED = ["Elevator Pitch", "Interview Q&A"];
+const FREE_UNLOCKED = ["Elevator Pitch", "Tech Stack Justification", "Challenges & Solutions"];
 const ALL_CARDS = [
   "Elevator Pitch",
   "Detailed Explanation",
@@ -414,11 +413,46 @@ export default function ExplainMyProject({ dark }) {
 
   // ── Upgrade (Razorpay hook-in) ──────────────────────────────────────────────
   const handleSelectPlan = async (planId) => {
-    // TODO: open Razorpay checkout with planId
-    // On success: await updateDoc(doc(db,"users",firebaseUser.uid), { plan: planId, credits: 999999 })
-    //             then re-fetch userData
-    alert(`Razorpay hook-in — planId: "${planId}"`);
-    setShowSubscription(false);
+    const planAmounts = { pro_monthly: 9900, pro_yearly: 99900 };
+    const amount = planAmounts[planId];
+    if (!amount) { setShowSubscription(false); return; }
+
+    try {
+      const res = await fetch("https://prepnpitch-backend.onrender.com/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount, planId }),
+      });
+      const order = await res.json();
+
+      const options = {
+        key: "rzp_test_ScDsW5PacIYn5B",
+        amount: order.amount,
+        currency: order.currency || "INR",
+        name: "PrepNPitch",
+        description: planId === "pro_monthly" ? "Pro Plan — ₹99/month" : "Annual Plan — ₹999/year",
+        order_id: order.id,
+        handler: async (response) => {
+          try {
+            await fetch("https://prepnpitch-backend.onrender.com/verify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...response, planId }),
+            });
+          } catch {/* ignore verify errors */}
+          if (firebaseUser) {
+            await updateDoc(doc(db, "users", firebaseUser.uid), { plan: planId, credits: 999999 });
+            setUserData((prev) => ({ ...prev, plan: planId, credits: 999999 }));
+          }
+          setShowSubscription(false);
+        },
+        theme: { color: "#F5A623" },
+      };
+      new window.Razorpay(options).open();
+    } catch (err) {
+      console.error("Payment error:", err);
+      alert("Could not initiate payment. Please try again.");
+    }
   };
 
   // ── Derived state ────────────────────────────────────────────────────────────
@@ -618,7 +652,7 @@ export default function ExplainMyProject({ dark }) {
                   </span>
                 </div>
                 {ALL_CARDS.map((title) => {
-                  const locked = false; // set to: !isPro && !FREE_UNLOCKED.includes(title) when gating is ready
+                  const locked = !isPro && !FREE_UNLOCKED.includes(title);
                   const contentMap = {
                     "Elevator Pitch":           result.elevatorPitch,
                     "Detailed Explanation":     result.detailedExplanation,
@@ -662,9 +696,6 @@ export default function ExplainMyProject({ dark }) {
           </div>
         )}
       </main>
-
-      <Payment />
-
 
       {/* ── Modals ── */}
       {showSubscription && (

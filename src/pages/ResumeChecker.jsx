@@ -159,14 +159,24 @@ function DropZone({ onFile, dark, file }) {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onClick={() => inputRef.current?.click()}
-      className={`relative cursor-pointer rounded-2xl border-2 border-dashed transition-all duration-200 p-10 text-center
-        ${dragging
-          ? dark ? "border-violet-500 bg-violet-900/20" : "border-violet-400 bg-violet-50"
+      style={{
+        position: "relative",
+        cursor: "pointer",
+        borderRadius: 16,
+        border: dragging
+          ? "2px dashed #F5A623"
           : file
-            ? dark ? "border-emerald-600 bg-emerald-900/10" : "border-emerald-400 bg-emerald-50"
-            : dark ? "border-stone-700 hover:border-stone-500 bg-stone-900" : "border-stone-300 hover:border-violet-300 bg-stone-50"
-        }`}
-    >
+            ? `2px dashed ${dark ? "#166534" : "#16a34a"}`
+            : `2px dashed ${dark ? "#222" : "#d4d4d4"}`,
+        background: dragging
+          ? "rgba(245,166,35,0.06)"
+          : file
+            ? (dark ? "rgba(22,101,52,0.1)" : "rgba(220,252,231,0.5)")
+            : (dark ? "#0d0d0d" : "#fafaf8"),
+        padding: "40px 24px",
+        textAlign: "center",
+        transition: "all 0.2s",
+      }}>
       <input ref={inputRef} type="file" accept=".pdf" className="hidden" onChange={handleChange} />
 
       {file ? (
@@ -208,7 +218,7 @@ function Skeleton({ dark, className }) {
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
-export default function ResumeChecker({ dark, setDark, user, onLogin, onLogout, credits, onSubscribe }) {
+export default function ResumeChecker({ dark, setDark, onSubscribe }) {
   const [file, setFile]           = useState(null);
   const [jobRole, setJobRole]     = useState("");
   const [loading, setLoading]     = useState(false);
@@ -266,8 +276,8 @@ export default function ResumeChecker({ dark, setDark, user, onLogin, onLogout, 
 
   const inputCls = `w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all duration-150
     ${dark
-      ? "bg-stone-800 border-stone-700 text-stone-100 placeholder:text-stone-500 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/20"
-      : "bg-stone-50 border-stone-200 text-stone-800 placeholder:text-stone-400 focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-100"
+      ? "bg-[#111] border-[#222] text-stone-100 placeholder:text-stone-500 hover:border-[#333]"
+      : "bg-stone-50 border-stone-200 text-stone-800 placeholder:text-stone-400 focus:bg-white hover:border-stone-300"
     }`;
 
   return (
@@ -284,25 +294,25 @@ export default function ResumeChecker({ dark, setDark, user, onLogin, onLogout, 
 
         {/* Hero */}
         <div className="mb-10 text-center">
-          <div className={`inline-flex items-center gap-1.5 border text-xs font-medium px-3 py-1.5 rounded-full mb-5
-            ${dark ? "bg-rose-900/30 border-rose-700 text-rose-400" : "bg-rose-50 border-rose-200/70 text-rose-600"}`}>
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-            AI-powered · ATS & impact analysis
+          <div className="inline-flex items-center gap-1.5 border text-xs font-medium px-3 py-1.5 rounded-full mb-5"
+            style={{ background: dark ? "rgba(255,107,107,0.1)" : "rgba(255,107,107,0.08)", borderColor: dark ? "rgba(255,107,107,0.35)" : "rgba(255,107,107,0.4)", color: "#FF6B6B" }}>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#FF6B6B" }} />
+            AI-powered · ATS &amp; impact analysis
           </div>
-          <h1 className={`text-3xl sm:text-4xl font-bold tracking-tight leading-tight mb-3 ${dark ? "text-stone-50" : "text-stone-900"}`}>
+          <h1 className={`text-3xl sm:text-4xl font-bold tracking-tight leading-tight mb-3 ${dark ? "text-stone-50" : "text-stone-900"}`}
+            style={{ fontFamily: "'Syne', sans-serif" }}>
             Resume Checker<br />
-            <span className="text-rose-500">Find what's holding you back.</span>
+            <span style={{ color: "#F5A623" }}>Find what's holding you back.</span>
           </h1>
-          <p className={`text-base max-w-md mx-auto leading-relaxed ${dark ? "text-stone-400" : "text-stone-500"}`}>
+          <p className="text-base max-w-md mx-auto leading-relaxed" style={{ color: dark ? "#666" : "#888" }}>
             Upload your PDF resume. We score it, find keyword gaps, and rewrite weak bullets — in seconds.
           </p>
         </div>
 
         {/* Upload Card */}
-        <div className={`border rounded-2xl shadow-sm overflow-hidden transition-colors duration-300 mb-6
-          ${dark ? "bg-stone-900 border-stone-800" : "bg-white border-stone-200"}`}>
-          <div className={`px-6 sm:px-8 pt-6 pb-3 border-b ${dark ? "border-stone-800" : "border-stone-100"}`}>
-            <h2 className={`text-xs font-semibold uppercase tracking-widest ${dark ? "text-stone-500" : "text-stone-400"}`}>
+        <div className="rounded-2xl overflow-hidden mb-6" style={{ background: dark ? "#0d0d0d" : "#ffffff", border: `1px solid ${dark ? "#1a1a1a" : "#e5e5e5"}` }}>
+          <div className="px-6 sm:px-8 pt-6 pb-3" style={{ borderBottom: `1px solid ${dark ? "#1a1a1a" : "#e5e5e5"}` }}>
+            <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: dark ? "#555" : "#999" }}>
               Upload Resume
             </h2>
           </div>
@@ -332,11 +342,11 @@ export default function ResumeChecker({ dark, setDark, user, onLogin, onLogout, 
             <button
               onClick={handleAnalyze}
               disabled={!file || loading}
-              className={`w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200
-                ${!file || loading
-                  ? dark ? "bg-stone-800 text-stone-600 cursor-not-allowed" : "bg-stone-200 text-stone-400 cursor-not-allowed"
-                  : "bg-rose-600 text-white hover:bg-rose-700 active:scale-[0.99] shadow-md shadow-rose-900/30"
-                }`}
+              className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200"
+              style={!file || loading
+                ? { background: dark ? "#111" : "#e5e5e5", color: dark ? "#444" : "#aaa", cursor: "not-allowed" }
+                : { background: "#F5A623", color: "#000" }
+              }
             >
               {loading && <SpinnerIcon />}
               {loading
@@ -388,15 +398,10 @@ export default function ResumeChecker({ dark, setDark, user, onLogin, onLogout, 
               )}
             </div>
 
-            {/* Overall Feedback */}
             {!loading && result?.overallFeedback && (
-              <div className={`border rounded-2xl p-5 ${dark ? "bg-stone-900 border-stone-700" : "bg-white border-stone-200"}`}>
-                <h3 className={`text-sm font-semibold mb-2 ${dark ? "text-stone-100" : "text-stone-800"}`}>
-                  Overall Feedback
-                </h3>
-                <p className={`text-sm leading-relaxed ${dark ? "text-stone-400" : "text-stone-600"}`}>
-                  {result.overallFeedback}
-                </p>
+              <div className="rounded-2xl p-5" style={{ background: dark ? "#0d0d0d" : "#ffffff", border: `1px solid ${dark ? "#1a1a1a" : "#e5e5e5"}` }}>
+                <h3 className="text-sm font-semibold mb-2" style={{ color: dark ? "#f0f0f0" : "#0a0a0a" }}>Overall Feedback</h3>
+                <p className="text-sm leading-relaxed" style={{ color: dark ? "#666" : "#888" }}>{result.overallFeedback}</p>
               </div>
             )}
 
