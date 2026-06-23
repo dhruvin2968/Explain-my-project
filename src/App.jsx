@@ -14,6 +14,7 @@ import ExplainMyProject from './pages/ExplainMyProject';
 import InterviewPrep from './pages/InterviewPrep';
 import ResumeChecker from './pages/ResumeChecker';
 import JobMatch from './pages/JobMatch';
+import FindJobs from './pages/FindJobs';
 
 export default function App() {
   const [dark, setDark]           = useState(true);
@@ -23,7 +24,7 @@ export default function App() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
-        setUser({ name: firebaseUser.displayName, email: firebaseUser.email, isPro: false });
+        setUser({ name: firebaseUser.displayName, email: firebaseUser.email, uid: firebaseUser.uid, isPro: false });
       } else {
         setUser(null);
       }
@@ -63,10 +64,11 @@ export default function App() {
         <main className="flex-grow pt-[64px]">
           <Routes>
             <Route path="/"            element={<LandingPage    dark={dark} />} />
-            <Route path="/explain"     element={<ExplainMyProject dark={dark} />} />
-            <Route path="/interviewprep" element={<InterviewPrep dark={dark} />} />
-            <Route path="/resumecheck" element={<ResumeChecker  dark={dark} setDark={setDark} onSubscribe={() => setShowPricing(true)} />} />
-            <Route path="/jobmatch"    element={<JobMatch        dark={dark} setDark={setDark} onSubscribe={() => setShowPricing(true)} />} />
+            <Route path="/explain"     element={<ExplainMyProject dark={dark} onSubscribe={() => setShowPricing(true)} />} />
+            <Route path="/interviewprep" element={<InterviewPrep dark={dark} user={user} onLogin={handleLogin} />} />
+            <Route path="/resumecheck" element={<ResumeChecker  dark={dark} setDark={setDark} user={user} onLogin={handleLogin} onSubscribe={() => setShowPricing(true)} />} />
+            <Route path="/jobmatch"    element={<JobMatch        dark={dark} setDark={setDark} user={user} onLogin={handleLogin} onSubscribe={() => setShowPricing(true)} />} />
+            <Route path="/findjobs"    element={<FindJobs        dark={dark} user={user} onLogin={handleLogin} onSubscribe={() => setShowPricing(true)} />} />
             <Route path="*"            element={<Navigate to="/" replace />} />
           </Routes>
         </main>
@@ -77,6 +79,7 @@ export default function App() {
         {showPricing && (
           <PricingModal
             dark={dark}
+            uid={user?.uid}
             onClose={() => setShowPricing(false)}
             onSuccess={(planId) => {
               console.log("Plan purchased:", planId);

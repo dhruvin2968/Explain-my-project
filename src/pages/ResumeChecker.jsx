@@ -255,8 +255,7 @@ export default function ResumeChecker({ dark, setDark, onSubscribe }) {
       }
 
       setStep("analyzing");
-      // const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/parse-resume`, {
-      const res = await fetch(`https://prepnpitch-backend.onrender.com/parse-resume`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/parse-resume`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resumeText, jobRole: jobRole.trim() }),

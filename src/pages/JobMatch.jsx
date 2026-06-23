@@ -257,7 +257,7 @@ export default function JobMatch({ dark, setDark, onSubscribe }) {
       if (!resumeText || resumeText.length < 100) throw new Error("Could not extract text from PDF. Make sure it's not a scanned image.");
 
       setStep("analyzing");
-      const res = await fetch("https://prepnpitch-backend.onrender.com/job-match", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/job-match`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resumeText, jobDescription: jd }),

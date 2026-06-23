@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 // ─── Plans ────────────────────────────────────────────────────────────────────
 const PLANS = [
   {
@@ -52,7 +54,7 @@ const PLANS = [
 ];
 
 // ─── PricingModal ─────────────────────────────────────────────────────────────
-export default function PricingModal({ dark, onClose, onSuccess }) {
+export default function PricingModal({ dark, onClose, onSuccess, uid }) {
   const [paying, setPaying] = useState(null);
 
   const bg       = dark ? "#0d0d0d" : "#ffffff";
@@ -66,7 +68,7 @@ export default function PricingModal({ dark, onClose, onSuccess }) {
 
     setPaying(plan.id);
     try {
-      const res = await fetch("https://prepnpitch-backend.onrender.com/create-order", {
+      const res = await fetch(`${API_URL}/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount: plan.amount, planId: plan.id }),
@@ -74,7 +76,7 @@ export default function PricingModal({ dark, onClose, onSuccess }) {
       const order = await res.json();
 
       const options = {
-        key: "rzp_test_ScDsW5PacIYn5B",
+        key: import.meta.env.VITE_RAZORPAY_KEY,
         amount: order.amount,
         currency: order.currency || "INR",
         name: "PrepNPitch",
@@ -82,10 +84,10 @@ export default function PricingModal({ dark, onClose, onSuccess }) {
         order_id: order.id,
         handler: async (response) => {
           try {
-            await fetch("https://prepnpitch-backend.onrender.com/verify-payment", {
+            await fetch(`${API_URL}/verify-payment`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ ...response, planId: plan.id }),
+              body: JSON.stringify({ ...response, planId: plan.id, uid }),
             });
             onSuccess?.(plan.id);
           } catch {

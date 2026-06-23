@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { id: "resume", label: "Resume Checker" },
   { id: "jobmatch", label: "JD Match" },
   { id: "interview", label: "Mock Interview" },
+  { id: "findjobs", label: "Find Jobs", pro: true },
 ];
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -184,6 +185,7 @@ export default function Header({ dark, setDark, user, onLogin, onLogout, credits
     interview: "/interviewprep",
     resume:    "/resumecheck",
     jobmatch:  "/jobmatch",
+    findjobs:  "/findjobs",
   };
 
   const navTo = (id) => navigate(ROUTE_MAP[id]);
@@ -226,7 +228,7 @@ export default function Header({ dark, setDark, user, onLogin, onLogout, credits
               PrepNPitch
             </span>
             <span className={`text-[10px] font-medium hidden sm:block mt-0.5 ${dark ? "text-stone-500" : "text-stone-400"}`}>
-              ExplainMyProject
+              Ace every interview
             </span>
           </div>
         </div>
@@ -236,13 +238,19 @@ export default function Header({ dark, setDark, user, onLogin, onLogout, credits
           {NAV_ITEMS.map(n => (
             <button
               key={n.id}
-              className="px-3 py-2 text-sm font-medium transition-colors rounded-md hover:bg-stone-800/20"
+              className="px-3 py-2 text-sm font-medium transition-colors rounded-md hover:bg-stone-800/20 flex items-center gap-1.5"
               onClick={() => navTo(n.id)}
               style={{ 
                 color: ROUTE_MAP[n.id] === location.pathname ? "#F5A623" : (dark ? "#999" : "#666") 
               }}
             >
               {n.label}
+              {n.pro && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md"
+                  style={{ background: "#F5A623", color: "#000", lineHeight: 1.4 }}>
+                  PRO
+                </span>
+              )}
             </button>
           ))}
         </div>
