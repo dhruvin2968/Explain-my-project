@@ -1,40 +1,10 @@
 import { useState, useEffect } from "react";
-import { initializeApp } from "firebase/app";
-import {
-  getAuth,
-  signInWithPopup,
-  GoogleAuthProvider,
-  signOut,
-  onAuthStateChanged,
-} from "firebase/auth";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  increment,
-} from "firebase/firestore";
-import { getAnalytics } from "firebase/analytics";
+import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc, setDoc, updateDoc, increment } from "firebase/firestore";
+import { auth, db, googleProvider as provider } from "../firebase/config";
 import Subscription from "../components/Subscription";
-import Payment from "../components/Payment";
 
-// ─── Firebase Init ────────────────────────────────────────────────────────────
-const firebaseConfig = {
-  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId:     import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
-};
-
-const app      = initializeApp(firebaseConfig);
-const auth     = getAuth(app);
-const db       = getFirestore(app);
-const provider = new GoogleAuthProvider();
-const analytics = getAnalytics(app); // eslint-disable-line no-unused-vars
+const API_URL = import.meta.env.VITE_API_URL;
 
 const FREE_CREDITS = 5;
 
@@ -139,7 +109,7 @@ const CARD_CONFIG = {
   },
 };
 
-const FREE_UNLOCKED = ["Elevator Pitch", "Interview Q&A"];
+const FREE_UNLOCKED = ["Elevator Pitch", "Tech Stack Justification", "Challenges & Solutions"];
 const ALL_CARDS = [
   "Elevator Pitch",
   "Detailed Explanation",
@@ -414,11 +384,46 @@ export default function ExplainMyProject({ dark }) {
 
   // ── Upgrade (Razorpay hook-in) ──────────────────────────────────────────────
   const handleSelectPlan = async (planId) => {
-    // TODO: open Razorpay checkout with planId
-    // On success: await updateDoc(doc(db,"users",firebaseUser.uid), { plan: planId, credits: 999999 })
-    //             then re-fetch userData
-    alert(`Razorpay hook-in — planId: "${planId}"`);
-    setShowSubscription(false);
+    const planAmounts = { pro_monthly: 9900, pro_yearly: 99900 };
+    const amount = planAmounts[planId];
+    if (!amount) { setShowSubscription(false); return; }
+
+    try {
+      const res = await fetch(`${API_URL}/create-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount, planId }),
+      });
+      const order = await res.json();
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY,
+        amount: order.amount,
+        currency: order.currency || "INR",
+        name: "PrepNPitch",
+        description: planId === "pro_monthly" ? "Pro Plan — ₹99/month" : "Annual Plan — ₹999/year",
+        order_id: order.id,
+        handler: async (response) => {
+          try {
+            await fetch(`${API_URL}/verify-payment`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...response, planId, uid: firebaseUser?.uid }),
+            });
+          } catch {/* ignore verify errors */}
+          if (firebaseUser) {
+            await updateDoc(doc(db, "users", firebaseUser.uid), { plan: planId, credits: 999999 });
+            setUserData((prev) => ({ ...prev, plan: planId, credits: 999999 }));
+          }
+          setShowSubscription(false);
+        },
+        theme: { color: "#F5A623" },
+      };
+      new window.Razorpay(options).open();
+    } catch (err) {
+      console.error("Payment error:", err);
+      alert("Could not initiate payment. Please try again.");
+    }
   };
 
   // ── Derived state ────────────────────────────────────────────────────────────
@@ -444,7 +449,7 @@ export default function ExplainMyProject({ dark }) {
     }
 
     try {
-      const res  = await fetch("https://prepnpitch-backend.onrender.com/generate", {
+      const res  = await fetch(`${API_URL}/generate`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ formData: form }),
@@ -452,8 +457,12 @@ export default function ExplainMyProject({ dark }) {
       const data = await res.json();
       setResult(data);
     } catch (err) {
-      console.error("Generate error:", err);
-      // TODO: show error toast
+      if (!isPro) {
+        // refund the credit if generation failed
+        await updateDoc(doc(db, "users", firebaseUser.uid), { credits: increment(1) });
+        setUserData((prev) => ({ ...prev, credits: prev.credits + 1 }));
+      }
+      setResult({ error: err.message || "Something went wrong. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -502,7 +511,7 @@ export default function ExplainMyProject({ dark }) {
         <div style={{ position: "absolute", bottom: 0, right: "33%", width: "16rem", height: "16rem", borderRadius: "50%", filter: "blur(80px)", background: dark ? "rgba(245,166,35,0.05)" : "rgba(245,166,35,0.08)" }} />
       </div>
 
-      {/* ── Main ── */}}
+      {/* ── Main ── */}
       <main className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-12">
 
         {/* Hero */}
@@ -618,7 +627,7 @@ export default function ExplainMyProject({ dark }) {
                   </span>
                 </div>
                 {ALL_CARDS.map((title) => {
-                  const locked = false; // set to: !isPro && !FREE_UNLOCKED.includes(title) when gating is ready
+                  const locked = !isPro && !FREE_UNLOCKED.includes(title);
                   const contentMap = {
                     "Elevator Pitch":           result.elevatorPitch,
                     "Detailed Explanation":     result.detailedExplanation,
@@ -662,9 +671,6 @@ export default function ExplainMyProject({ dark }) {
           </div>
         )}
       </main>
-
-      <Payment />
-
 
       {/* ── Modals ── */}
       {showSubscription && (

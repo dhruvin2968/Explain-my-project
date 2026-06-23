@@ -1,6 +1,7 @@
-import { useState } from "react";
+﻿import { useState, useRef, useCallback } from "react";
+import * as pdfjsLib from "pdfjs-dist";
 
-// ─── Icons ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Icons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SpinnerIcon = () => (
   <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -32,7 +33,86 @@ const BookIcon = () => (
   </svg>
 );
 
-// ─── Match Ring ───────────────────────────────────────────────────────────────
+const UploadIcon = () => (
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+  </svg>
+);
+
+const FileIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+  </svg>
+);
+
+// â”€â”€â”€ Drop Zone â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function DropZone({ onFile, dark, file, label = "Drop your resume PDF here" }) {
+  const [dragging, setDragging] = useState(false);
+  const inputRef = useRef(null);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    setDragging(false);
+    const f = e.dataTransfer.files[0];
+    if (f && f.type === "application/pdf") onFile(f);
+  }, [onFile]);
+
+  const handleDragOver = (e) => { e.preventDefault(); setDragging(true); };
+  const handleDragLeave = () => setDragging(false);
+  const handleChange = (e) => { if (e.target.files[0]) onFile(e.target.files[0]); };
+
+  return (
+    <div
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onClick={() => inputRef.current?.click()}
+      style={{
+        position: "relative",
+        cursor: "pointer",
+        borderRadius: 14,
+        border: dragging
+          ? "2px dashed #F5A623"
+          : file
+            ? `2px dashed ${dark ? "#166534" : "#16a34a"}`
+            : `2px dashed ${dark ? "#222" : "#d4d4d4"}`,
+        background: dragging
+          ? "rgba(245,166,35,0.06)"
+          : file
+            ? (dark ? "rgba(22,101,52,0.1)" : "rgba(220,252,231,0.5)")
+            : (dark ? "#0d0d0d" : "#fafaf8"),
+        padding: "32px 24px",
+        textAlign: "center",
+        transition: "all 0.2s",
+      }}
+    >
+      <input ref={inputRef} type="file" accept=".pdf" className="hidden" onChange={handleChange} />
+      {file ? (
+        <div className="flex flex-col items-center gap-3">
+          <div style={{ padding: 12, borderRadius: 12, background: dark ? "rgba(22,101,52,0.3)" : "rgba(220,252,231,0.8)" }}>
+            <FileIcon />
+          </div>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 600, color: dark ? "#4ade80" : "#15803d" }}>{file.name}</p>
+            <p style={{ fontSize: 12, marginTop: 4, color: dark ? "#555" : "#999" }}>{(file.size / 1024).toFixed(1)} KB Â· Click to change</p>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-3">
+          <div style={{ padding: 16, borderRadius: 16, background: dark ? "#111" : "#ffffff", border: `1px solid ${dark ? "#222" : "#e5e5e5"}` }}>
+            <UploadIcon />
+          </div>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 600, color: dark ? "#f0f0f0" : "#0a0a0a" }}>{label}</p>
+            <p style={{ fontSize: 12, marginTop: 4, color: dark ? "#555" : "#999" }}>or click to browse Â· PDF only Â· Max 5MB</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// â”€â”€â”€ Match Ring â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function MatchRing({ score }) {
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
@@ -40,15 +120,15 @@ function MatchRing({ score }) {
 
   const color = score >= 75 ? "#10b981"
     : score >= 50 ? "#f59e0b"
-    : "#ef4444";
+      : "#ef4444";
 
   const label = score >= 75 ? "Strong Match"
     : score >= 50 ? "Partial Match"
-    : "Weak Match";
+      : "Weak Match";
 
   const bgColor = score >= 75 ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800"
     : score >= 50 ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
-    : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800";
+      : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800";
 
   return (
     <div className={`flex flex-col items-center gap-3 p-6 rounded-2xl border ${bgColor}`}>
@@ -78,7 +158,7 @@ function MatchRing({ score }) {
   );
 }
 
-// ─── Score Bar ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Score Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ScoreBar({ label, score, color, dark }) {
   const colorMap = {
     violet: "bg-violet-500",
@@ -103,7 +183,7 @@ function ScoreBar({ label, score, color, dark }) {
   );
 }
 
-// ─── Skill Tag ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Skill Tag â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SkillTag({ label, matched, dark }) {
   return (
     <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border
@@ -121,7 +201,7 @@ function SkillTag({ label, matched, dark }) {
   );
 }
 
-// ─── Prep Task Card ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Prep Task Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function PrepCard({ task, index, dark }) {
   return (
     <div className={`flex items-start gap-3 p-4 rounded-xl border
@@ -142,46 +222,68 @@ function PrepCard({ task, index, dark }) {
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
-export default function JobMatch({ dark, setDark, user, onLogin, onLogout, credits, onSubscribe }) {
-  const [resume, setResume]   = useState("");
-  const [jd, setJd]           = useState("");
+// â”€â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+export default function JobMatch({ dark, setDark, onSubscribe }) {
+  const [file, setFile] = useState(null);
+  const [jd, setJd] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult]   = useState(null);
-  const [error, setError]     = useState("");
+  const [step, setStep] = useState(""); // "extracting" | "analyzing"
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
 
-  const isValid = resume.trim().length > 100 && jd.trim().length > 50;
+  const isValid = !!file && jd.trim().length > 50;
+
+  // â”€â”€ Extract text from PDF â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const extractText = async (pdfFile) => {
+    const arrayBuffer = await pdfFile.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let text = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map((item) => item.str).join(" ") + "\n";
+    }
+    return text.trim();
+  };
 
   const handleMatch = async () => {
     if (!isValid || loading) return;
     setError("");
     setResult(null);
     setLoading(true);
-
     try {
-      const res = await fetch(`https://prepnpitch-backend.onrender.com/job-match`, {
+      setStep("extracting");
+      const resumeText = await extractText(file);
+      if (!resumeText || resumeText.length < 100) throw new Error("Could not extract text from PDF. Make sure it's not a scanned image.");
+
+      setStep("analyzing");
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/job-match`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resumeText: resume, jobDescription: jd }),
+        body: JSON.stringify({ resumeText, jobDescription: jd }),
       });
-
       if (!res.ok) throw new Error("Server error. Please try again.");
-      const data = await res.json();
-      setResult(data);
+      setResult(await res.json());
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
+      setStep("");
     }
   };
 
+  const border = dark ? "#1a1a1a" : "#e5e5e5";
+  const cardBg = dark ? "#0d0d0d" : "#ffffff";
+  const textMain = dark ? "#f0f0f0" : "#0a0a0a";
+  const textSub = dark ? "#666" : "#888";
+
   const textareaCls = `w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all duration-150 resize-none leading-relaxed font-mono
     ${dark
-      ? "bg-stone-800 border-stone-700 text-stone-100 placeholder:text-stone-600 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20"
-      : "bg-stone-50 border-stone-200 text-stone-800 placeholder:text-stone-400 focus:border-purple-400 focus:bg-white focus:ring-4 focus:ring-purple-100"
+      ? "bg-[#111] border-[#222] text-stone-100 placeholder:text-stone-600 hover:border-[#333]"
+      : "bg-stone-50 border-stone-200 text-stone-800 placeholder:text-stone-400 focus:bg-white hover:border-stone-300"
     }`;
 
-  const labelCls = `text-xs font-semibold uppercase tracking-wide ${dark ? "text-stone-400" : "text-stone-500"}`;
+  const labelCls = `text-xs font-semibold uppercase tracking-wide ${dark ? "text-stone-500" : "text-stone-400"}`;
 
   return (
     <div style={{ minHeight: "100vh", background: dark ? "#050505" : "#f5f5f0", transition: "background 0.3s" }}>
@@ -191,48 +293,42 @@ export default function JobMatch({ dark, setDark, user, onLogin, onLogout, credi
         <div style={{ position: "absolute", top: "-10rem", right: "-10rem", width: "24rem", height: "24rem", borderRadius: "50%", filter: "blur(80px)", background: dark ? "rgba(167,139,250,0.07)" : "rgba(167,139,250,0.12)" }} />
         <div style={{ position: "absolute", bottom: 0, left: "-8rem", width: "20rem", height: "20rem", borderRadius: "50%", filter: "blur(80px)", background: dark ? "rgba(14,165,233,0.06)" : "rgba(14,165,233,0.1)" }} />
       </div>
+
       <main className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-12">
 
         {/* Hero */}
         <div className="mb-10 text-center">
-          <div className={`inline-flex items-center gap-1.5 border text-xs font-medium px-3 py-1.5 rounded-full mb-5
-            ${dark ? "bg-purple-900/30 border-purple-700 text-purple-400" : "bg-purple-50 border-purple-200 text-purple-700"}`}>
-            <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-            AI-powered · Know your odds before you apply
+          <div className="inline-flex items-center gap-1.5 border text-xs font-medium px-3 py-1.5 rounded-full mb-5"
+            style={{ background: dark ? "rgba(167,139,250,0.1)" : "rgba(167,139,250,0.08)", borderColor: dark ? "rgba(167,139,250,0.35)" : "rgba(167,139,250,0.4)", color: "#A78BFA" }}>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#A78BFA" }} />
+            AI-powered Â· Know your odds before you apply
           </div>
-          <h1 className={`text-3xl sm:text-4xl font-bold tracking-tight leading-tight mb-3 ${dark ? "text-stone-50" : "text-stone-900"}`}>
+          <h1 className={`text-3xl sm:text-4xl font-bold tracking-tight leading-tight mb-3 ${dark ? "text-stone-50" : "text-stone-900"}`}
+            style={{ fontFamily: "'Syne', sans-serif" }}>
             Job Match Score<br />
-            <span className="text-purple-500">Know before you apply.</span>
+            <span style={{ color: "#F5A623" }}>Know before you apply.</span>
           </h1>
-          <p className={`text-base max-w-md mx-auto leading-relaxed ${dark ? "text-stone-400" : "text-stone-500"}`}>
-            Paste your resume and the job description. Get a match score, skill gaps, and a custom prep plan in seconds.
+          <p className="text-base max-w-md mx-auto leading-relaxed" style={{ color: textSub }}>
+            Upload your resume PDF and paste the job description. Get a match score, skill gaps, and a prep plan in seconds.
           </p>
         </div>
 
         {/* Input Card */}
-        <div className={`border rounded-2xl shadow-sm overflow-hidden mb-6
-          ${dark ? "bg-stone-900 border-stone-800" : "bg-white border-stone-200"}`}>
-          <div className={`px-6 sm:px-8 pt-6 pb-3 border-b ${dark ? "border-stone-800" : "border-stone-100"}`}>
-            <h2 className={`text-xs font-semibold uppercase tracking-widest ${dark ? "text-stone-500" : "text-stone-400"}`}>
+        <div className="rounded-2xl overflow-hidden mb-6" style={{ background: cardBg, border: `1px solid ${border}` }}>
+          <div className="px-6 sm:px-8 pt-6 pb-3" style={{ borderBottom: `1px solid ${border}` }}>
+            <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: dark ? "#555" : "#999" }}>
               Match Details
             </h2>
           </div>
           <div className="px-6 sm:px-8 py-6 space-y-5">
 
+            {/* PDF Resume Upload */}
             <div className="flex flex-col gap-1.5">
-              <label className={labelCls}>Your Resume <span className="normal-case font-normal">(paste plain text)</span></label>
-              <textarea
-                rows={8}
-                className={textareaCls}
-                placeholder="Paste your resume text here..."
-                value={resume}
-                onChange={(e) => setResume(e.target.value)}
-              />
-              <span className={`text-xs text-right ${dark ? "text-stone-600" : "text-stone-400"}`}>
-                {resume.length} chars {resume.length < 100 && resume.length > 0 && "· too short"}
-              </span>
+              <label className={labelCls}>Your Resume <span className="normal-case font-normal">(PDF)</span></label>
+              <DropZone onFile={setFile} dark={dark} file={file} label="Drop your resume PDF here" />
             </div>
 
+            {/* JD Textarea */}
             <div className="flex flex-col gap-1.5">
               <label className={labelCls}>Job Description <span className="normal-case font-normal">(paste full JD)</span></label>
               <textarea
@@ -245,8 +341,8 @@ export default function JobMatch({ dark, setDark, user, onLogin, onLogout, credi
             </div>
 
             {error && (
-              <div className={`flex items-start gap-2.5 px-4 py-3 rounded-xl border text-sm
-                ${dark ? "bg-red-900/20 border-red-800 text-red-400" : "bg-red-50 border-red-200 text-red-600"}`}>
+              <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl border text-sm"
+                style={{ background: dark ? "rgba(239,68,68,0.1)" : "#fef2f2", borderColor: dark ? "#7f1d1d" : "#fecaca", color: dark ? "#f87171" : "#dc2626" }}>
                 <AlertIcon /> {error}
               </div>
             )}
@@ -254,19 +350,21 @@ export default function JobMatch({ dark, setDark, user, onLogin, onLogout, credi
             <button
               onClick={handleMatch}
               disabled={!isValid || loading}
-              className={`w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200
-                ${!isValid || loading
-                  ? dark ? "bg-stone-800 text-stone-600 cursor-not-allowed" : "bg-stone-200 text-stone-400 cursor-not-allowed"
-                  : "bg-purple-600 text-white hover:bg-purple-700 active:scale-[0.99] shadow-md shadow-purple-900/30"
-                }`}
+              className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200"
+              style={!isValid || loading
+                ? { background: dark ? "#111" : "#e5e5e5", color: dark ? "#444" : "#aaa", cursor: "not-allowed" }
+                : { background: "#F5A623", color: "#000" }
+              }
             >
               {loading && <SpinnerIcon />}
-              {loading ? "Analyzing match..." : "Check Job Match →"}
+              {loading
+                ? step === "extracting" ? "Reading PDFâ€¦" : "Analyzing matchâ€¦"
+                : "Check Job Match â†’"}
             </button>
 
-            {!isValid && (
-              <p className={`text-center text-xs ${dark ? "text-stone-600" : "text-stone-400"}`}>
-                Paste both your resume and the job description to continue
+            {!isValid && !file && (
+              <p className="text-center text-xs" style={{ color: dark ? "#444" : "#bbb" }}>
+                Upload your resume PDF and paste the job description to continue
               </p>
             )}
           </div>
@@ -278,68 +376,58 @@ export default function JobMatch({ dark, setDark, user, onLogin, onLogout, credi
             <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
             <div className="flex items-center gap-3">
-              <div className={`h-px flex-1 ${dark ? "bg-stone-800" : "bg-stone-200"}`} />
-              <span className={`text-xs font-semibold uppercase tracking-widest whitespace-nowrap ${dark ? "text-stone-600" : "text-stone-400"}`}>
-                {loading ? "Analyzing..." : "Your Results"}
+              <div style={{ height: 1, flex: 1, background: dark ? "#1a1a1a" : "#e5e5e5" }} />
+              <span className="text-xs font-semibold uppercase tracking-widest whitespace-nowrap" style={{ color: dark ? "#444" : "#bbb" }}>
+                {loading ? "Analyzingâ€¦" : "Your Results"}
               </span>
-              <div className={`h-px flex-1 ${dark ? "bg-stone-800" : "bg-stone-200"}`} />
+              <div style={{ height: 1, flex: 1, background: dark ? "#1a1a1a" : "#e5e5e5" }} />
             </div>
 
             {loading ? (
               <div className="space-y-4">
-                {[1,2,3].map(i => (
-                  <div key={i} className={`h-24 rounded-2xl animate-pulse ${dark ? "bg-stone-900" : "bg-white border border-stone-200"}`} />
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-24 rounded-2xl animate-pulse" style={{ background: dark ? "#0d0d0d" : "#ffffff", border: `1px solid ${border}` }} />
                 ))}
               </div>
             ) : result && (
               <>
                 {/* Match ring + score bars */}
-                <div className={`border rounded-2xl p-6 ${dark ? "bg-stone-900 border-stone-800" : "bg-white border-stone-200"}`}>
+                <div className="rounded-2xl p-6" style={{ background: cardBg, border: `1px solid ${border}` }}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-center">
                     <div className="flex justify-center">
                       <MatchRing score={result.overallMatch} />
                     </div>
                     <div className="space-y-4">
-                      <ScoreBar label="Skills Match"       score={result.skillsMatch}      color="violet" dark={dark} />
-                      <ScoreBar label="Experience Match"   score={result.experienceMatch}  color="sky"    dark={dark} />
-                      <ScoreBar label="Keyword Coverage"   score={result.keywordCoverage}  color="emerald" dark={dark} />
-                      <ScoreBar label="Role Alignment"     score={result.roleAlignment}    color="amber"  dark={dark} />
+                      <ScoreBar label="Skills Match" score={result.skillsMatch} color="violet" dark={dark} />
+                      <ScoreBar label="Experience Match" score={result.experienceMatch} color="sky" dark={dark} />
+                      <ScoreBar label="Keyword Coverage" score={result.keywordCoverage} color="emerald" dark={dark} />
+                      <ScoreBar label="Role Alignment" score={result.roleAlignment} color="amber" dark={dark} />
                     </div>
                   </div>
                 </div>
 
                 {/* Summary */}
                 {result.summary && (
-                  <div className={`border rounded-2xl p-5 ${dark ? "bg-stone-900 border-stone-700" : "bg-white border-stone-200"}`}>
+                  <div className="rounded-2xl p-5" style={{ background: cardBg, border: `1px solid ${border}` }}>
                     <div className="flex items-center gap-2 mb-2">
                       <BoltIcon />
-                      <h3 className={`text-sm font-semibold ${dark ? "text-stone-100" : "text-stone-800"}`}>
-                        AI Assessment
-                      </h3>
+                      <h3 className="text-sm font-semibold" style={{ color: textMain }}>AI Assessment</h3>
                     </div>
-                    <p className={`text-sm leading-relaxed ${dark ? "text-stone-400" : "text-stone-600"}`}>
-                      {result.summary}
-                    </p>
+                    <p className="text-sm leading-relaxed" style={{ color: textSub }}>{result.summary}</p>
                   </div>
                 )}
 
                 {/* Matched + Missing Skills */}
                 {(result.matchedSkills?.length > 0 || result.missingSkills?.length > 0) && (
-                  <div className={`border rounded-2xl p-5 ${dark ? "bg-stone-900 border-stone-700" : "bg-white border-stone-200"}`}>
-                    <h3 className={`text-sm font-semibold mb-3 ${dark ? "text-stone-100" : "text-stone-800"}`}>
-                      Skill Breakdown
-                    </h3>
+                  <div className="rounded-2xl p-5" style={{ background: cardBg, border: `1px solid ${border}` }}>
+                    <h3 className="text-sm font-semibold mb-3" style={{ color: textMain }}>Skill Breakdown</h3>
                     <div className="flex flex-wrap gap-2">
-                      {result.matchedSkills?.map((s, i) => (
-                        <SkillTag key={`m-${i}`} label={s} matched={true} dark={dark} />
-                      ))}
-                      {result.missingSkills?.map((s, i) => (
-                        <SkillTag key={`g-${i}`} label={s} matched={false} dark={dark} />
-                      ))}
+                      {result.matchedSkills?.map((s, i) => <SkillTag key={`m-${i}`} label={s} matched={true} dark={dark} />)}
+                      {result.missingSkills?.map((s, i) => <SkillTag key={`g-${i}`} label={s} matched={false} dark={dark} />)}
                     </div>
                     <div className="flex items-center gap-4 mt-3">
-                      <span className={`text-xs ${dark ? "text-stone-500" : "text-stone-400"}`}>
-                        <span className="text-emerald-500 font-semibold">✓</span> You have · <span className="text-red-500 font-semibold">✗</span> Missing
+                      <span className="text-xs" style={{ color: dark ? "#555" : "#bbb" }}>
+                        <span className="text-emerald-500 font-semibold">âœ“</span> You have Â· <span className="text-red-500 font-semibold">âœ—</span> Missing
                       </span>
                     </div>
                   </div>
@@ -350,34 +438,30 @@ export default function JobMatch({ dark, setDark, user, onLogin, onLogout, credi
                   <div>
                     <div className="flex items-center gap-2 mb-3">
                       <BookIcon />
-                      <h3 className={`text-sm font-semibold ${dark ? "text-stone-100" : "text-stone-800"}`}>
-                        Your Prep Plan
-                      </h3>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full
-                        ${dark ? "bg-purple-900/40 text-purple-400" : "bg-purple-50 text-purple-600"}`}>
-                        {result.prepPlan.length} topics · ~{result.prepPlan.reduce((a, t) => a + (t.hours || 2), 0)}h total
+                      <h3 className="text-sm font-semibold" style={{ color: textMain }}>Your Prep Plan</h3>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full"
+                        style={{ background: dark ? "rgba(167,139,250,0.15)" : "rgba(167,139,250,0.1)", color: "#A78BFA" }}>
+                        {result.prepPlan.length} topics Â· ~{result.prepPlan.reduce((a, t) => a + (t.hours || 2), 0)}h total
                       </span>
                     </div>
                     <div className="space-y-2.5">
-                      {result.prepPlan.map((task, i) => (
-                        <PrepCard key={i} task={task} index={i} dark={dark} />
-                      ))}
+                      {result.prepPlan.map((task, i) => <PrepCard key={i} task={task} index={i} dark={dark} />)}
                     </div>
                   </div>
                 )}
 
                 {/* Done */}
                 <div className="flex justify-center">
-                  <span className={`inline-flex items-center gap-2 border text-xs font-medium px-3.5 py-1.5 rounded-full
-                    ${dark ? "bg-emerald-900/30 border-emerald-700 text-emerald-400" : "bg-emerald-50 border-emerald-200 text-emerald-700"}`}>
-                    <CheckIcon /> Analysis complete · Fix the gaps before applying
+                  <span className="inline-flex items-center gap-2 border text-xs font-medium px-3.5 py-1.5 rounded-full"
+                    style={{ background: dark ? "rgba(16,185,129,0.1)" : "rgba(209,250,229,0.8)", borderColor: dark ? "#065f46" : "#6ee7b7", color: dark ? "#34d399" : "#059669" }}>
+                    <CheckIcon /> Analysis complete Â· Fix the gaps before applying
                   </span>
                 </div>
-              </>
+                </>
             )}
-          </div>
+              </div>
         )}
-      </main>
+          </main>
     </div>
   );
 }

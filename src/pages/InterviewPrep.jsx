@@ -73,10 +73,11 @@ export default function InterviewPrep({ dark }) {
         {/* Badge */}
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, border: `1px solid rgba(245,166,35,0.4)`, borderRadius: 99, padding: "5px 14px", marginBottom: 32, fontSize: 11, color: "#F5A623", fontFamily: "'JetBrains Mono', monospace", background: "rgba(245,166,35,0.08)" }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#F5A623", display: "inline-block", animation: "blink 1.2s infinite" }} />
-          02 — Interview Prep · Coming Soon
+          Mock Interviews · Coming Soon
         </div>
 
-        <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: "clamp(30px, 5vw, 58px)", lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: 20, color: textMain }}>
+        <h1 className={`text-3xl sm:text-4xl font-bold tracking-tight leading-tight mb-3 ${dark ? "text-stone-50" : "text-stone-900"}`}
+          style={{ fontFamily: "'Syne', sans-serif" }}>
           Master the interview,<br />
           <span style={{ color: "#F5A623" }}>before you step in the room.</span>
         </h1>
