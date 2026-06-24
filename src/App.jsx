@@ -15,6 +15,7 @@ import InterviewPrep from './pages/InterviewPrep';
 import ResumeChecker from './pages/ResumeChecker';
 import JobMatch from './pages/JobMatch';
 import FindJobs from './pages/FindJobs';
+import LegalPage from './pages/LegalPage';
 
 export default function App() {
   const [dark, setDark]           = useState(true);
@@ -69,6 +70,10 @@ export default function App() {
             <Route path="/resumecheck" element={<ResumeChecker  dark={dark} setDark={setDark} user={user} onLogin={handleLogin} onSubscribe={() => setShowPricing(true)} />} />
             <Route path="/jobmatch"    element={<JobMatch        dark={dark} setDark={setDark} user={user} onLogin={handleLogin} onSubscribe={() => setShowPricing(true)} />} />
             <Route path="/findjobs"    element={<FindJobs        dark={dark} user={user} onLogin={handleLogin} onSubscribe={() => setShowPricing(true)} />} />
+            <Route path="/privacy"    element={<LegalPage dark={dark} type="privacy" />} />
+            <Route path="/terms"      element={<LegalPage dark={dark} type="terms"   />} />
+            <Route path="/refund"     element={<LegalPage dark={dark} type="refund"  />} />
+            <Route path="/contact"    element={<LegalPage dark={dark} type="contact" />} />
             <Route path="*"            element={<Navigate to="/" replace />} />
           </Routes>
         </main>

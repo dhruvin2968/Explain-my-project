@@ -293,9 +293,8 @@ export default function ResumeChecker({ dark, setDark, onSubscribe }) {
 
         {/* Hero */}
         <div className="mb-10 text-center">
-          <div className="inline-flex items-center gap-1.5 border text-xs font-medium px-3 py-1.5 rounded-full mb-5"
-            style={{ background: dark ? "rgba(255,107,107,0.1)" : "rgba(255,107,107,0.08)", borderColor: dark ? "rgba(255,107,107,0.35)" : "rgba(255,107,107,0.4)", color: "#FF6B6B" }}>
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#FF6B6B" }} />
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, border: "1px solid rgba(255,107,107,0.4)", borderRadius: 99, padding: "5px 14px", marginBottom: 32, fontSize: 11, color: "#FF6B6B", fontFamily: "'JetBrains Mono', monospace", background: "rgba(255,107,107,0.08)" }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#FF6B6B", display: "inline-block", animation: "blink 1.2s infinite" }} />
             AI-powered · ATS &amp; impact analysis
           </div>
           <h1 className={`text-3xl sm:text-4xl font-bold tracking-tight leading-tight mb-3 ${dark ? "text-stone-50" : "text-stone-900"}`}

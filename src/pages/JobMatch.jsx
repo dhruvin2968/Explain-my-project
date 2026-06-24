@@ -94,7 +94,7 @@ function DropZone({ onFile, dark, file, label = "Drop your resume PDF here" }) {
           </div>
           <div>
             <p style={{ fontSize: 14, fontWeight: 600, color: dark ? "#4ade80" : "#15803d" }}>{file.name}</p>
-            <p style={{ fontSize: 12, marginTop: 4, color: dark ? "#555" : "#999" }}>{(file.size / 1024).toFixed(1)} KB Â· Click to change</p>
+            <p style={{ fontSize: 12, marginTop: 4, color: dark ? "#555" : "#999" }}>{(file.size / 1024).toFixed(1)} KB · Click to change</p>
           </div>
         </div>
       ) : (
@@ -104,7 +104,7 @@ function DropZone({ onFile, dark, file, label = "Drop your resume PDF here" }) {
           </div>
           <div>
             <p style={{ fontSize: 14, fontWeight: 600, color: dark ? "#f0f0f0" : "#0a0a0a" }}>{label}</p>
-            <p style={{ fontSize: 12, marginTop: 4, color: dark ? "#555" : "#999" }}>or click to browse Â· PDF only Â· Max 5MB</p>
+            <p style={{ fontSize: 12, marginTop: 4, color: dark ? "#555" : "#999" }}>or click to browse · PDF only · Max 5MB</p>
           </div>
         </div>
       )}
@@ -298,10 +298,9 @@ export default function JobMatch({ dark, setDark, onSubscribe }) {
 
         {/* Hero */}
         <div className="mb-10 text-center">
-          <div className="inline-flex items-center gap-1.5 border text-xs font-medium px-3 py-1.5 rounded-full mb-5"
-            style={{ background: dark ? "rgba(167,139,250,0.1)" : "rgba(167,139,250,0.08)", borderColor: dark ? "rgba(167,139,250,0.35)" : "rgba(167,139,250,0.4)", color: "#A78BFA" }}>
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#A78BFA" }} />
-            AI-powered Â· Know your odds before you apply
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, border: "1px solid rgba(167,139,250,0.4)", borderRadius: 99, padding: "5px 14px", marginBottom: 32, fontSize: 11, color: "#A78BFA", fontFamily: "'JetBrains Mono', monospace", background: "rgba(167,139,250,0.08)" }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#A78BFA", display: "inline-block", animation: "blink 1.2s infinite" }} />
+            AI-powered · Know your odds before you apply
           </div>
           <h1 className={`text-3xl sm:text-4xl font-bold tracking-tight leading-tight mb-3 ${dark ? "text-stone-50" : "text-stone-900"}`}
             style={{ fontFamily: "'Syne', sans-serif" }}>
@@ -358,8 +357,8 @@ export default function JobMatch({ dark, setDark, onSubscribe }) {
             >
               {loading && <SpinnerIcon />}
               {loading
-                ? step === "extracting" ? "Reading PDFâ€¦" : "Analyzing matchâ€¦"
-                : "Check Job Match â†’"}
+                ? step === "extracting" ? "Reading PDF..." : "Analyzing match..."
+                : "Check Job Match \u2192"}
             </button>
 
             {!isValid && !file && (
@@ -378,7 +377,7 @@ export default function JobMatch({ dark, setDark, onSubscribe }) {
             <div className="flex items-center gap-3">
               <div style={{ height: 1, flex: 1, background: dark ? "#1a1a1a" : "#e5e5e5" }} />
               <span className="text-xs font-semibold uppercase tracking-widest whitespace-nowrap" style={{ color: dark ? "#444" : "#bbb" }}>
-                {loading ? "Analyzingâ€¦" : "Your Results"}
+                {loading ? "Analyzing..." : "Your Results"}
               </span>
               <div style={{ height: 1, flex: 1, background: dark ? "#1a1a1a" : "#e5e5e5" }} />
             </div>
