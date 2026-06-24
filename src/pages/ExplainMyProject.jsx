@@ -6,7 +6,7 @@ import Subscription from "../components/Subscription";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const FREE_CREDITS = 5;
+const FREE_CREDITS = 3;
 
 // ─── Firestore helpers ────────────────────────────────────────────────────────
 async function createUserDoc(firebaseUser) {
@@ -449,11 +449,28 @@ export default function ExplainMyProject({ dark }) {
     }
 
     try {
+      const token = await auth.currentUser?.getIdToken().catch(() => null);
       const res  = await fetch(`${API_URL}/generate`, {
         method:  "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body:    JSON.stringify({ formData: form }),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        if (res.status === 429) {
+          // Refund the credit since the request was blocked
+          if (!isPro) {
+            await updateDoc(doc(db, "users", firebaseUser.uid), { credits: increment(1) });
+            setUserData((prev) => ({ ...prev, credits: prev.credits + 1 }));
+          }
+          setShowSubscription(true);
+          return;
+        }
+        throw new Error(errData.message || errData.error || "Server error. Please try again.");
+      }
       const data = await res.json();
       setResult(data);
     } catch (err) {

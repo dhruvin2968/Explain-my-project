@@ -1,5 +1,6 @@
 ﻿import { useState, useRef, useCallback } from "react";
 import * as pdfjsLib from "pdfjs-dist";
+import { auth } from "../firebase/config";
 
 // â”€â”€â”€ Icons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SpinnerIcon = () => (
@@ -257,12 +258,19 @@ export default function JobMatch({ dark, setDark, onSubscribe }) {
       if (!resumeText || resumeText.length < 100) throw new Error("Could not extract text from PDF. Make sure it's not a scanned image.");
 
       setStep("analyzing");
+      const token = await auth.currentUser?.getIdToken().catch(() => null);
       const res = await fetch(`${import.meta.env.VITE_API_URL}/job-match`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ resumeText, jobDescription: jd }),
       });
-      if (!res.ok) throw new Error("Server error. Please try again.");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Server error. Please try again.");
+      }
       setResult(await res.json());
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
