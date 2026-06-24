@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import * as pdfjsLib from "pdfjs-dist";
+import { auth } from "../firebase/config";
 
 // Required: set worker source in your main.jsx or index.js:
 // import * as pdfjsLib from "pdfjs-dist";
@@ -255,13 +256,20 @@ export default function ResumeChecker({ dark, setDark, onSubscribe }) {
       }
 
       setStep("analyzing");
+      const token = await auth.currentUser?.getIdToken().catch(() => null);
       const res = await fetch(`${import.meta.env.VITE_API_URL}/parse-resume`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ resumeText, jobRole: jobRole.trim() }),
       });
 
-      if (!res.ok) throw new Error("Server error. Please try again.");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Server error. Please try again.");
+      }
       const data = await res.json();
       setResult(data);
 

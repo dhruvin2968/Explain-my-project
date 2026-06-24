@@ -142,7 +142,7 @@ const PLANS = [
     price: "₹0",
     period: "",
     desc: "Get started, no card needed.",
-    features: ["5 project explanations", "5 resume checks", "Basic interview questions", "Job match (2/mo)"],
+    features: ["3 project explanations/mo", "3 resume checks/mo", "Basic interview questions", "Job match (2/mo)"],
     cta: "Start free",
     highlight: false,
   },
@@ -349,7 +349,7 @@ function SampleOutputSection({ onTryNow }) {
   );
 }
 
-export default function LandingPage({ dark }) {
+export default function LandingPage({ dark, onSubscribe }) {
   const navigate = useNavigate();
   const textMain = dark ? "#f0f0f0" : "#0a0a0a";
 
@@ -481,7 +481,7 @@ export default function LandingPage({ dark }) {
                   ))}
                 </ul>
                 <button
-                  onClick={() => navigate("/explain")}
+                  onClick={() => plan.highlight ? onSubscribe?.() : navigate("/explain")}
                   style={{ width: "100%", padding: "12px", background: plan.highlight ? "#F5A623" : "transparent", color: plan.highlight ? "#000" : (dark ? "#666" : "#444"), border: plan.highlight ? "none" : `1px solid ${dark ? "#222" : "#ccc"}`, borderRadius: "6px", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s" }}
                 >
                   {plan.cta}

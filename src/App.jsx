@@ -64,7 +64,7 @@ export default function App() {
 
         <main className="flex-grow pt-[64px]">
           <Routes>
-            <Route path="/"            element={<LandingPage    dark={dark} />} />
+            <Route path="/"            element={<LandingPage    dark={dark} onSubscribe={() => setShowPricing(true)} />} />
             <Route path="/explain"     element={<ExplainMyProject dark={dark} onSubscribe={() => setShowPricing(true)} />} />
             <Route path="/interviewprep" element={<InterviewPrep dark={dark} user={user} onLogin={handleLogin} />} />
             <Route path="/resumecheck" element={<ResumeChecker  dark={dark} setDark={setDark} user={user} onLogin={handleLogin} onSubscribe={() => setShowPricing(true)} />} />
