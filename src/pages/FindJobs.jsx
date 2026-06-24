@@ -3,6 +3,8 @@ import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase/config";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 // ─── Firestore helpers (same pattern as ExplainMyProject) ────────────────────
 async function getUserData(fbUser) {
   const ref = doc(db, "users", fbUser.uid);
@@ -209,8 +211,10 @@ export default function FindJobs({ dark, onLogin, onSubscribe }) {
   const isPro = userData?.plan && userData.plan !== "free";
 
   // ── Search state ────────────────────────────────────────────────────────────
+  const [source, setSource] = useState("remote"); // "remote" | "india"
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
+  const [location, setLocation] = useState("Any");
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -224,20 +228,36 @@ export default function FindJobs({ dark, onLogin, onSubscribe }) {
     setSearched(true);
 
     try {
-      const params = new URLSearchParams({ limit: "20" });
-      if (query.trim()) params.set("search", query.trim());
-      if (category !== "All") params.set("category", category);
-
-      const res = await fetch(`https://remotive.com/api/remote-jobs?${params}`);
-      if (!res.ok) throw new Error("Failed to fetch jobs. Please try again.");
-      const data = await res.json();
-      setJobs(data.jobs || []);
+      if (source === "remote") {
+        const params = new URLSearchParams({ limit: "20" });
+        if (query.trim()) params.set("search", query.trim());
+        if (category !== "All") params.set("category", category);
+        const res = await fetch(`https://remotive.com/api/remote-jobs?${params}`);
+        if (!res.ok) throw new Error("Failed to fetch jobs. Please try again.");
+        const data = await res.json();
+        setJobs(data.jobs || []);
+      } else {
+        // India jobs — proxied through backend (key stays server-side)
+        const token = firebaseUser ? await firebaseUser.getIdToken() : null;
+        const params = new URLSearchParams({ page: "1" });
+        if (query.trim()) params.set("query", query.trim());
+        if (location !== "Any") params.set("location", location);
+        const res = await fetch(`${API_URL}/jobs/india?${params}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Failed to fetch India jobs.");
+        }
+        const data = await res.json();
+        setJobs(data.jobs || []);
+      }
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
-  }, [query, category, loading]);
+  }, [query, category, location, loading, source, firebaseUser]);
 
   const textMain = dark ? "#f0f0f0" : "#0a0a0a";
   const textSub = dark ? "#666" : "#888";
@@ -286,8 +306,43 @@ export default function FindJobs({ dark, onLogin, onSubscribe }) {
           </p>
         </div>
 
-        {/* Pro gate */}
-        {!isPro ? (
+        {/* Source Tabs */}
+        <div className="flex gap-2 mb-5">
+          {[
+            { id: "remote", label: "Remote (Global)", emoji: "🌐", pro: false },
+            { id: "india", label: "India Jobs", emoji: "🇮🇳", pro: true },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setSource(tab.id);
+                setJobs([]);
+                setSearched(false);
+                setError("");
+              }}
+              className="flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-xl border transition-all"
+              style={source === tab.id
+                ? { background: "#F5A623", color: "#000", borderColor: "#F5A623" }
+                : { background: dark ? "#0d0d0d" : "#fff", color: dark ? "#888" : "#666", borderColor: dark ? "#1a1a1a" : "#e5e5e5" }
+              }
+            >
+              <span>{tab.emoji}</span>
+              {tab.label}
+              {tab.pro && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md"
+                  style={{
+                    background: source === tab.id ? "rgba(0,0,0,0.2)" : "#F5A623",
+                    color: source === tab.id ? "#000" : "#000",
+                  }}>
+                  PRO
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* India tab — Pro gate */}
+        {source === "india" && !isPro ? (
           <ProGate dark={dark} user={firebaseUser} onLogin={onLogin} onSubscribe={onSubscribe} />
         ) : (
           <>
@@ -321,22 +376,40 @@ export default function FindJobs({ dark, onLogin, onSubscribe }) {
                   />
                 </div>
 
-                {/* Category pills */}
-                <div className="flex flex-wrap gap-2">
-                  {CATEGORIES.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setCategory(cat)}
-                      className="text-xs font-medium px-3 py-1.5 rounded-full border transition-all duration-150"
-                      style={category === cat
-                        ? { background: "#F5A623", color: "#000", borderColor: "#F5A623" }
-                        : { background: "transparent", color: dark ? "#666" : "#888", borderColor: dark ? "#2a2a2a" : "#e5e5e5" }
-                      }
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
+                {/* Category pills (Remote) / Location chips (India) */}
+                {source === "remote" ? (
+                  <div className="flex flex-wrap gap-2">
+                    {CATEGORIES.map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setCategory(cat)}
+                        className="text-xs font-medium px-3 py-1.5 rounded-full border transition-all duration-150"
+                        style={category === cat
+                          ? { background: "#F5A623", color: "#000", borderColor: "#F5A623" }
+                          : { background: "transparent", color: dark ? "#666" : "#888", borderColor: dark ? "#2a2a2a" : "#e5e5e5" }
+                        }
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {["Any", "Bangalore", "Mumbai", "Hyderabad", "Delhi NCR", "Pune", "Chennai", "Remote"].map((loc) => (
+                      <button
+                        key={loc}
+                        onClick={() => setLocation(loc)}
+                        className="text-xs font-medium px-3 py-1.5 rounded-full border transition-all duration-150"
+                        style={location === loc
+                          ? { background: "#F5A623", color: "#000", borderColor: "#F5A623" }
+                          : { background: "transparent", color: dark ? "#666" : "#888", borderColor: dark ? "#2a2a2a" : "#e5e5e5" }
+                        }
+                      >
+                        {loc}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 {error && (
                   <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl border text-sm"
