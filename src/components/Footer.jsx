@@ -1,4 +1,6 @@
 // ─── Footer ───────────────────────────────────────────────────────────────────
+import { Link } from "react-router-dom";
+
 /**
  * Props:
  *   dark  boolean
@@ -9,6 +11,13 @@ export default function Footer({ dark }) {
   const logoText    = dark ? "#f0f0f0" : "#0a0a0a";
   const linkColor   = dark ? "#555"    : "#999";
   const monoColor   = dark ? "#333"    : "#bbb";
+
+  const legalLinks = [
+    { label: "Privacy Policy",  path: "/privacy"  },
+    { label: "Terms of Service", path: "/terms"   },
+    { label: "Refund Policy",   path: "/refund"   },
+    { label: "Contact Us",      path: "/contact"  },
+  ];
 
   return (
     <footer style={{
@@ -28,9 +37,15 @@ export default function Footer({ dark }) {
         </div>
         <span style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: "13px", color: logoText }}>PrepNPitch</span>
       </div>
-      <div style={{ display: "flex", gap: "24px" }}>
-        {["Privacy Policy", "Terms of Service", "Refund Policy"].map(l => (
-          <a key={l} href="#" style={{ color: linkColor, fontSize: "12px", textDecoration: "none", transition: "color 0.2s" }}>{l}</a>
+      <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", justifyContent: "center" }}>
+        {legalLinks.map(l => (
+          <Link key={l.label} to={l.path}
+            style={{ color: linkColor, fontSize: "12px", textDecoration: "none", transition: "color 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.color = "#F5A623"}
+            onMouseLeave={e => e.currentTarget.style.color = linkColor}
+          >
+            {l.label}
+          </Link>
         ))}
       </div>
       <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: monoColor }}>
