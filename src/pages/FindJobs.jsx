@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase/config";
@@ -11,15 +11,17 @@ async function getUserData(fbUser) {
   const snap = await getDoc(ref);
   if (snap.exists()) return snap.data();
   // First visit — create doc with free plan
-  await setDoc(ref, {
+  const newUser = {
     name: fbUser.displayName,
     email: fbUser.email,
     plan: "free",
     credits: 5,
     createdAt: new Date().toISOString(),
-  });
-  return { plan: "free", credits: 5 };
+  };
+  await setDoc(ref, newUser);
+  return newUser;
 }
+
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const SearchIcon = () => (
@@ -145,8 +147,68 @@ function JobCard({ job, dark }) {
   );
 }
 
+// ─── No-Credits Gate ──────────────────────────────────────────────────────────
+function NoCreditsGate({ dark, onSubscribe }) {
+  return (
+    <div className="flex flex-col items-center justify-center text-center py-28 px-6">
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
+        style={{ background: dark ? "rgba(245,166,35,0.1)" : "rgba(245,166,35,0.12)" }}>
+        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="#F5A623" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+        </svg>
+      </div>
+      <h2 className="text-xl font-bold mb-2" style={{ color: dark ? "#f0f0f0" : "#0a0a0a", fontFamily: "'Syne', sans-serif" }}>
+        You've used all your free searches
+      </h2>
+      <p className="text-sm max-w-xs mb-6" style={{ color: dark ? "#666" : "#888" }}>
+        Upgrade to Pro for unlimited job searches and India listings.
+      </p>
+      <button
+        onClick={onSubscribe}
+        className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-lg"
+        style={{ background: "#F5A623", color: "#000" }}
+      >
+        Upgrade to Pro →
+      </button>
+    </div>
+  );
+}
+
+// ─── Auth Gate (for unauthenticated users) ────────────────────────────────────
+function AuthGate({ dark, onLogin }) {
+  return (
+    <div className="flex flex-col items-center justify-center text-center py-28 px-6">
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
+        style={{ background: dark ? "rgba(245,166,35,0.1)" : "rgba(245,166,35,0.12)" }}>
+        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="#F5A623" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+        </svg>
+      </div>
+      <h2 className="text-xl font-bold mb-2" style={{ color: dark ? "#f0f0f0" : "#0a0a0a", fontFamily: "'Syne', sans-serif" }}>
+        Sign in to search jobs
+      </h2>
+      <p className="text-sm max-w-xs mb-6" style={{ color: dark ? "#666" : "#888" }}>
+        Access thousands of remote tech jobs. Free users get global search; Pro users unlock India listings too.
+      </p>
+      <button
+        onClick={onLogin}
+        className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-lg"
+        style={{ background: "#F5A623", color: "#000" }}
+      >
+        <svg className="w-4 h-4" viewBox="0 0 24 24">
+          <path fill="#000" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#000" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#000" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#000" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Sign in with Google
+      </button>
+    </div>
+  );
+}
+
 // ─── Pro Gate ─────────────────────────────────────────────────────────────────
-function ProGate({ dark, user, onLogin, onSubscribe }) {
+function ProGate({ dark, onSubscribe }) {
   return (
     <div className="flex flex-col items-center justify-center text-center py-24 px-6">
       <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6"
@@ -157,27 +219,15 @@ function ProGate({ dark, user, onLogin, onSubscribe }) {
         Pro feature
       </h2>
       <p className="text-sm max-w-xs mb-6" style={{ color: dark ? "#666" : "#888" }}>
-        {!user
-          ? "Sign in and upgrade to Pro to access job search powered by live listings."
-          : "Upgrade to Pro to unlock real-time job listings tailored to your profile."}
+        Upgrade to Pro to unlock real-time India job listings tailored to your profile.
       </p>
-      {!user ? (
-        <button
-          onClick={onLogin}
-          className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-lg"
-          style={{ background: "#F5A623", color: "#000" }}
-        >
-          Sign in to continue
-        </button>
-      ) : (
-        <button
-          onClick={onSubscribe}
-          className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-lg"
-          style={{ background: "#F5A623", color: "#000" }}
-        >
-          Upgrade to Pro →
-        </button>
-      )}
+      <button
+        onClick={onSubscribe}
+        className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-lg"
+        style={{ background: "#F5A623", color: "#000" }}
+      >
+        Upgrade to Pro →
+      </button>
     </div>
   );
 }
@@ -209,21 +259,57 @@ export default function FindJobs({ dark, onLogin, onSubscribe }) {
   }, []);
 
   const isPro = userData?.plan && userData.plan !== "free";
+  const credits = userData?.credits ?? 0;
 
   // ── Search state ────────────────────────────────────────────────────────────
   const [source, setSource] = useState("remote"); // "remote" | "india"
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [location, setLocation] = useState("Any");
-  const [jobs, setJobs] = useState([]);
+  const [allJobs, setAllJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [searched, setSearched] = useState(false);
 
+  // ── Client-side filtering (instant, no re-fetch) ────────────────────────────
+  const jobs = useMemo(() => {
+    let filtered = allJobs;
+    if (source === "remote") {
+      // Category filter for remote jobs (Remotive)
+      if (category !== "All") {
+        filtered = filtered.filter((job) => {
+          const cat = (job.category || "").toLowerCase();
+          const tags = (job.tags || []).map((t) => t.toLowerCase());
+          const needle = category.toLowerCase();
+          return cat.includes(needle) || tags.some((t) => t.includes(needle));
+        });
+      }
+    } else {
+      // Client-side location filter for India jobs
+      if (location !== "Any") {
+        filtered = filtered.filter((job) => {
+          const loc = (job.candidate_required_location || "").toLowerCase();
+          return loc.includes(location.toLowerCase());
+        });
+      }
+      // Client-side keyword filter on already-loaded India results
+      if (query.trim()) {
+        const q = query.trim().toLowerCase();
+        filtered = filtered.filter((job) => {
+          return (
+            (job.title || "").toLowerCase().includes(q) ||
+            (job.company_name || "").toLowerCase().includes(q)
+          );
+        });
+      }
+    }
+    return filtered;
+  }, [allJobs, category, location, query, source]);
+
   const handleSearch = useCallback(async () => {
     if (loading) return;
     setError("");
-    setJobs([]);
+    setAllJobs([]);
     setLoading(true);
     setSearched(true);
 
@@ -235,7 +321,7 @@ export default function FindJobs({ dark, onLogin, onSubscribe }) {
         const res = await fetch(`https://remotive.com/api/remote-jobs?${params}`);
         if (!res.ok) throw new Error("Failed to fetch jobs. Please try again.");
         const data = await res.json();
-        setJobs(data.jobs || []);
+        setAllJobs(data.jobs || []);
       } else {
         // India jobs — proxied through backend (key stays server-side)
         const token = firebaseUser ? await firebaseUser.getIdToken() : null;
@@ -250,7 +336,7 @@ export default function FindJobs({ dark, onLogin, onSubscribe }) {
           throw new Error(err.error || "Failed to fetch India jobs.");
         }
         const data = await res.json();
-        setJobs(data.jobs || []);
+        setAllJobs(data.jobs || []);
       }
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
@@ -316,7 +402,7 @@ export default function FindJobs({ dark, onLogin, onSubscribe }) {
               key={tab.id}
               onClick={() => {
                 setSource(tab.id);
-                setJobs([]);
+                setAllJobs([]);
                 setSearched(false);
                 setError("");
               }}
@@ -341,9 +427,13 @@ export default function FindJobs({ dark, onLogin, onSubscribe }) {
           ))}
         </div>
 
-        {/* India tab — Pro gate */}
-        {source === "india" && !isPro ? (
-          <ProGate dark={dark} user={firebaseUser} onLogin={onLogin} onSubscribe={onSubscribe} />
+        {/* Auth / Pro gate */}
+        {!firebaseUser ? (
+          <AuthGate dark={dark} onLogin={onLogin} />
+        ) : !isPro && credits <= 0 ? (
+          <NoCreditsGate dark={dark} onSubscribe={onSubscribe} />
+        ) : source === "india" && !isPro ? (
+          <ProGate dark={dark} onSubscribe={onSubscribe} />
         ) : (
           <>
             {/* Search bar */}
@@ -430,6 +520,18 @@ export default function FindJobs({ dark, onLogin, onSubscribe }) {
                   {loading && <SpinnerIcon />}
                   {loading ? "Searching…" : "Search Jobs →"}
                 </button>
+
+                {!isPro && source === "remote" && (
+                  <p className="text-center text-xs" style={{ color: dark ? "#444" : "#aaa" }}>
+                    {credits} free search{credits !== 1 ? "es" : ""} remaining ·{" "}
+                    <button
+                      onClick={onSubscribe}
+                      style={{ color: "#F5A623", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", fontSize: "inherit" }}
+                    >
+                      Go Pro for unlimited
+                    </button>
+                  </p>
+                )}
               </div>
             </div>
 
@@ -442,7 +544,7 @@ export default function FindJobs({ dark, onLogin, onSubscribe }) {
                 <div className="flex items-center gap-3">
                   <div style={{ height: 1, flex: 1, background: border }} />
                   <span className="text-xs font-semibold uppercase tracking-widest whitespace-nowrap" style={{ color: dark ? "#444" : "#bbb" }}>
-                    {loading ? "Searching…" : `${jobs.length} result${jobs.length !== 1 ? "s" : ""}`}
+                    {loading ? "Searching…" : `${jobs.length} result${jobs.length !== 1 ? "s" : ""}${category !== "All" && allJobs.length !== jobs.length ? ` (filtered from ${allJobs.length})` : ""}`}
                   </span>
                   <div style={{ height: 1, flex: 1, background: border }} />
                 </div>
