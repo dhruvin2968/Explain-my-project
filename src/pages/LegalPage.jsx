@@ -76,7 +76,7 @@ const CONTENT = {
       {
         heading: "1. Acceptance of Terms",
         body: [
-          "By accessing or using PrepNPitch (prepnpitch.com), you agree to be bound by these Terms of Service. If you do not agree, please do not use the service.",
+          "By accessing or using PrepNPitch (prepnpitch.vercel.app), you agree to be bound by these Terms of Service. If you do not agree, please do not use the service.",
         ],
       },
       {

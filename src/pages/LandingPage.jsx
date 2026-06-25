@@ -349,7 +349,7 @@ function SampleOutputSection({ onTryNow }) {
   );
 }
 
-export default function LandingPage({ dark, onSubscribe }) {
+export default function LandingPage({ dark, user, onLogin, onSubscribe }) {
   const navigate = useNavigate();
   const textMain = dark ? "#f0f0f0" : "#0a0a0a";
 
@@ -462,7 +462,11 @@ export default function LandingPage({ dark, onSubscribe }) {
           </div>
 
           <div className="plans-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "16px" }}>
-            {PLANS.map((plan) => (
+            {PLANS.filter((plan) => {
+              // Hide the Pro plan upgrade option for Pro users
+              if (user?.isPro && (plan.id === "pro" || plan.highlight)) return false;
+              return true;
+            }).map((plan) => (
               <div key={plan.name} className={`plan-card${plan.highlight ? " highlight" : ""}`}>
                 {plan.highlight && (
                   <div style={{ display: "inline-block", background: "#F5A623", color: "#000", fontSize: "11px", fontWeight: 700, padding: "3px 10px", borderRadius: "4px", marginBottom: "16px", letterSpacing: "0.05em" }}>MOST POPULAR</div>
