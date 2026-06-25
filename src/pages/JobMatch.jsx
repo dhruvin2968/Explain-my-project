@@ -1,7 +1,7 @@
 ﻿import { useState, useRef, useCallback, useEffect } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc, increment } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase/config";
 
 const FREE_CREDITS = 5;
@@ -21,9 +21,7 @@ async function getUserData(fbUser) {
   return newUser;
 }
 
-async function spendCredit(uid) {
-  await updateDoc(doc(db, "users", uid), { credits: increment(-1) });
-}
+const SpinnerIcon = () => (
 
 // â”€â”€â”€ Icons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SpinnerIcon = () => (
@@ -377,12 +375,10 @@ export default function JobMatch({ dark, onLogin, onSubscribe }) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.error || "Server error. Please try again.");
       }
-      setResult(await res.json());
-
-      // Deduct credit for free users after successful match
-      if (!isPro && firebaseUser) {
-        await spendCredit(firebaseUser.uid);
-        setUserData((prev) => prev ? { ...prev, credits: Math.max(0, (prev.credits ?? 0) - 1) } : prev);
+      const data = await res.json();
+      setResult(data);
+      if (typeof data.creditsRemaining === "number") {
+        setUserData((prev) => prev ? { ...prev, credits: data.creditsRemaining } : prev);
       }
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");

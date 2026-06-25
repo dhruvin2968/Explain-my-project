@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc, increment } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase/config";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -22,9 +22,6 @@ async function getUserData(fbUser) {
   return newUser;
 }
 
-async function spendCredit(uid) {
-  await updateDoc(doc(db, "users", uid), { credits: increment(-1) });
-}
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const SearchIcon = () => (
@@ -325,12 +322,6 @@ export default function FindJobs({ dark, onLogin, onSubscribe }) {
         if (!res.ok) throw new Error("Failed to fetch jobs. Please try again.");
         const data = await res.json();
         setAllJobs(data.jobs || []);
-
-        // Deduct credit for free users after successful search
-        if (!isPro && firebaseUser) {
-          await spendCredit(firebaseUser.uid);
-          setUserData((prev) => prev ? { ...prev, credits: Math.max(0, (prev.credits ?? 0) - 1) } : prev);
-        }
       } else {
         // India jobs — proxied through backend (key stays server-side)
         const token = firebaseUser ? await firebaseUser.getIdToken() : null;

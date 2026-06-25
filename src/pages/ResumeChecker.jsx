@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc, increment } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase/config";
 
 const FREE_CREDITS = 5;
@@ -19,10 +19,6 @@ async function getUserData(fbUser) {
   };
   await setDoc(ref, newUser);
   return newUser;
-}
-
-async function spendCredit(uid) {
-  await updateDoc(doc(db, "users", uid), { credits: increment(-1) });
 }
 
 // Required: set worker source in your main.jsx or index.js:
@@ -376,11 +372,8 @@ export default function ResumeChecker({ dark, onLogin, onSubscribe }) {
       }
       const data = await res.json();
       setResult(data);
-
-      // Deduct credit for free users after successful analysis
-      if (!isPro && firebaseUser) {
-        await spendCredit(firebaseUser.uid);
-        setUserData((prev) => prev ? { ...prev, credits: Math.max(0, (prev.credits ?? 0) - 1) } : prev);
+      if (typeof data.creditsRemaining === "number") {
+        setUserData((prev) => prev ? { ...prev, credits: data.creditsRemaining } : prev);
       }
 
     } catch (err) {

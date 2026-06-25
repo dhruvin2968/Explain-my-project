@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc, increment } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db, googleProvider as provider } from "../firebase/config";
 import Subscription from "../components/Subscription";
 
@@ -27,11 +27,6 @@ async function getUserData(firebaseUser) {
   const snap = await getDoc(ref);
   if (snap.exists()) return snap.data();
   return createUserDoc(firebaseUser);
-}
-
-async function spendCredit(uid) {
-  const ref = doc(db, "users", uid);
-  await updateDoc(ref, { credits: increment(-1) });
 }
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -429,8 +424,9 @@ export default function ExplainMyProject({ dark }) {
               body: JSON.stringify({ ...response, planId, uid: firebaseUser?.uid }),
             });
           } catch {/* ignore verify errors */}
+          // Backend /verify-payment has already updated Firestore via Admin SDK
+          // Just update local state for instant UI response
           if (firebaseUser) {
-            await updateDoc(doc(db, "users", firebaseUser.uid), { plan: planId, credits: 999999 });
             setUserData((prev) => ({ ...prev, plan: planId, credits: 999999 }));
           }
           setShowSubscription(false);
@@ -515,11 +511,6 @@ export default function ExplainMyProject({ dark }) {
     setLoading(true);
     setResult(null);
 
-    if (!isPro) {
-      await spendCredit(firebaseUser.uid);
-      setUserData((prev) => ({ ...prev, credits: prev.credits - 1 }));
-    }
-
     try {
       const token = await auth.currentUser?.getIdToken().catch(() => null);
       const res  = await fetch(`${API_URL}/generate`, {
@@ -532,12 +523,7 @@ export default function ExplainMyProject({ dark }) {
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        if (res.status === 429) {
-          // Refund the credit since the request was blocked
-          if (!isPro) {
-            await updateDoc(doc(db, "users", firebaseUser.uid), { credits: increment(1) });
-            setUserData((prev) => ({ ...prev, credits: prev.credits + 1 }));
-          }
+        if (res.status === 429 || res.status === 403) {
           setShowSubscription(true);
           return;
         }
@@ -545,12 +531,11 @@ export default function ExplainMyProject({ dark }) {
       }
       const data = await res.json();
       setResult(data);
-    } catch (err) {
-      if (!isPro) {
-        // refund the credit if generation failed
-        await updateDoc(doc(db, "users", firebaseUser.uid), { credits: increment(1) });
-        setUserData((prev) => ({ ...prev, credits: prev.credits + 1 }));
+      // Update credits display from server response (credits deducted server-side)
+      if (typeof data.creditsRemaining === "number") {
+        setUserData((prev) => ({ ...prev, credits: data.creditsRemaining }));
       }
+    } catch (err) {
       setResult({ error: err.message || "Something went wrong. Please try again." });
     } finally {
       setLoading(false);
