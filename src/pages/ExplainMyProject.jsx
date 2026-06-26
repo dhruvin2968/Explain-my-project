@@ -451,7 +451,6 @@ export default function ExplainMyProject({ dark }) {
   // ── Download PDF ──────────────────────────────────────────────────────────────
   const handleDownloadPDF = () => {
     if (!result) return;
-    if (!isPro) { setShowSubscription(true); return; }
 
     const sections = [
       { title: "Elevator Pitch", content: result.elevatorPitch },
@@ -459,7 +458,7 @@ export default function ExplainMyProject({ dark }) {
       { title: "Tech Stack Justification", content: result.techStackJustification },
       { title: "Challenges & Solutions", content: result.challengesAndSolutions },
       { title: "Interview Q&A", content: result.interviewQA },
-    ].filter((s) => isPro || ["Elevator Pitch", "Tech Stack Justification", "Challenges & Solutions"].includes(s.title));
+    ].filter((s) => isPro || FREE_UNLOCKED.includes(s.title));
 
     const qaHtml = (items) =>
       items.map((item, i) => `
@@ -697,16 +696,10 @@ export default function ExplainMyProject({ dark }) {
                       : "bg-white border-stone-200 text-stone-600 hover:bg-stone-50 hover:text-stone-900 shadow-sm"
                     }`}
                 >
-                  {isPro ? (
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                    </svg>
-                  ) : (
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                    </svg>
-                  )}
-                  Download PDF {!isPro && <span className="ml-0.5 text-[10px] font-bold text-amber-500">PRO</span>}
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  Download PDF
                 </button>
               </div>
             )}
