@@ -18,6 +18,14 @@ service cloud.firestore {
             .hasAny(['credits', 'plan', 'upgradedAt']);
     }
 
+    // Feedback: anyone can submit, nobody can read via client SDK
+    match /feedback/{docId} {
+      allow create: if request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 2000;
+      allow read, update, delete: if false;
+    }
+
     // Deny everything else by default
     match /{document=**} {
       allow read, write: if false;

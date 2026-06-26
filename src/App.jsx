@@ -8,11 +8,12 @@ import { auth, db, googleProvider } from './firebase/config';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import PricingModal from './components/PricingModal';
+import FeedbackModal from './components/FeedbackModal';
 
 // Pages
 import LandingPage from './pages/LandingPage';
 import ExplainMyProject from './pages/ExplainMyProject';
-import InterviewPrep from './pages/InterviewPrep';
+import MockInterview from './pages/MockInterview';
 import ResumeChecker from './pages/ResumeChecker';
 import JobMatch from './pages/JobMatch';
 import FindJobs from './pages/FindJobs';
@@ -39,7 +40,8 @@ export default function App() {
   const [dark, setDark]           = useState(true);
   const [user, setUser]           = useState(null);
   const [credits, setCredits]     = useState(null);
-  const [showPricing, setShowPricing] = useState(false);
+  const [showPricing, setShowPricing]   = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const loadUser = async (firebaseUser) => {
     const data = await fetchUserData(firebaseUser);
@@ -118,7 +120,7 @@ export default function App() {
           <Routes>
             <Route path="/"            element={<LandingPage    dark={dark} user={user} onLogin={handleLogin} onSubscribe={handleGoPro} />} />
             <Route path="/explain"     element={<ExplainMyProject dark={dark} onSubscribe={() => setShowPricing(true)} />} />
-            <Route path="/interviewprep" element={<InterviewPrep dark={dark} user={user} onLogin={handleLogin} />} />
+            <Route path="/interviewprep" element={<MockInterview dark={dark} user={user} onLogin={handleLogin} onSubscribe={handleGoPro} />} />
             <Route path="/resumecheck" element={<ResumeChecker  dark={dark} onLogin={handleLogin} onSubscribe={() => setShowPricing(true)} />} />
             <Route path="/jobmatch"    element={<JobMatch        dark={dark} onLogin={handleLogin} onSubscribe={() => setShowPricing(true)} />} />
             <Route path="/findjobs"    element={<FindJobs        dark={dark} onLogin={handleLogin} onSubscribe={() => setShowPricing(true)} />} />
@@ -140,6 +142,33 @@ export default function App() {
             onClose={() => setShowPricing(false)}
             onSuccess={handlePurchaseSuccess}
           />
+        )}
+
+        {/* Floating feedback button */}
+        <button
+          onClick={() => setShowFeedback(true)}
+          style={{
+            position: 'fixed', bottom: 24, right: 24, zIndex: 998,
+            display: 'flex', alignItems: 'center', gap: 7,
+            padding: '9px 16px',
+            background: dark ? '#0d0d0d' : '#ffffff',
+            border: `1px solid ${dark ? '#2a2a2a' : '#e0e0e0'}`,
+            borderRadius: 99,
+            fontSize: 12, fontWeight: 600,
+            color: dark ? '#888' : '#666',
+            cursor: 'pointer',
+            boxShadow: dark ? '0 2px 12px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.1)',
+            transition: 'border-color 0.2s, color 0.2s',
+            fontFamily: "'DM Sans', sans-serif",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = '#F5A623'; e.currentTarget.style.color = '#F5A623'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = dark ? '#2a2a2a' : '#e0e0e0'; e.currentTarget.style.color = dark ? '#888' : '#666'; }}
+        >
+          💬 Feedback
+        </button>
+
+        {showFeedback && (
+          <FeedbackModal dark={dark} user={user} onClose={() => setShowFeedback(false)} />
         )}
       </div>
     </BrowserRouter>
