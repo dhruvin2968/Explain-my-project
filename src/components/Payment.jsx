@@ -7,31 +7,30 @@ const Payment = () => {
   const handlePayment = async () => {
     try {
       const res = await fetch(`${API_URL}/create-order`, {
-        method: "POST"
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: 9900, planId: "pro_monthly" }),
       });
 
       const order = await res.json();
-const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY,
-  amount: order.amount,
-  currency: order.currency,
-  name: "Explain My Project",
-  description: "Pro Plan",
-  order_id: order.id,
-  // ❌ REMOVE the method: {} block entirely — it does nothing
-  handler: async function (response) {
-    await fetch(`${API_URL}/verify-payment`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(response)
-    });
-    alert("Payment Successful 🚀");
-  },
-  theme: { color: "#7c3aed" }
-};
+      if (order.error) throw new Error(order.error);
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      const cashfree = await window.Cashfree({ mode: import.meta.env.VITE_CASHFREE_ENV || "sandbox" });
+      const result = await cashfree.checkout({
+        paymentSessionId: order.payment_session_id,
+        redirectTarget: "_modal",
+      });
+
+      if (result.error) throw new Error(result.error.message || "Payment cancelled.");
+
+      if (result.paymentDetails) {
+        await fetch(`${API_URL}/verify-payment`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order_id: order.order_id, planId: "pro_monthly" }),
+        });
+        alert("Payment Successful 🚀");
+      }
 
     } catch (err) {
       console.error(err);

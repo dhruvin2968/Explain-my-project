@@ -74,33 +74,31 @@ export default function PricingModal({ dark, onClose, onSuccess, uid }) {
         body: JSON.stringify({ amount: plan.amount, planId: plan.id }),
       });
       const order = await res.json();
+      if (order.error) throw new Error(order.error);
 
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY,
-        amount: order.amount,
-        currency: order.currency || "INR",
-        name: "PrepNPitch",
-        description: plan.name + " Plan",
-        order_id: order.id,
-        handler: async (response) => {
-          try {
-            await fetch(`${API_URL}/verify-payment`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ ...response, planId: plan.id, uid }),
-            });
-            onSuccess?.(plan.id);
-          } catch {
-            // payment verified on Razorpay, ignore verify endpoint errors
-          }
-          onClose();
-        },
-        theme: { color: "#F5A623" },
-        modal: { ondismiss: () => setPaying(null) },
-      };
+      const cashfree = await window.Cashfree({ mode: import.meta.env.VITE_CASHFREE_ENV || "sandbox" });
+      const result = await cashfree.checkout({
+        paymentSessionId: order.payment_session_id,
+        redirectTarget: "_modal",
+      });
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      if (result.error) {
+        throw new Error(result.error.message || "Payment cancelled.");
+      }
+
+      if (result.paymentDetails) {
+        try {
+          await fetch(`${API_URL}/verify-payment`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ order_id: order.order_id, planId: plan.id, uid }),
+          });
+          onSuccess?.(plan.id);
+        } catch {
+          // payment verified by Cashfree — ignore endpoint errors
+        }
+        onClose();
+      }
     } catch (err) {
       console.error("Payment error:", err);
       alert("Could not initiate payment. Please try again.");

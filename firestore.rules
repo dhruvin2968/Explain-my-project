@@ -18,6 +18,12 @@ service cloud.firestore {
             .hasAny(['credits', 'plan', 'upgradedAt']);
     }
 
+    // Bookings: backend writes via Admin SDK; clients can only read their own
+    match /bookings/{docId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow write: if false; // all writes done server-side via Admin SDK
+    }
+
     // Feedback: anyone can submit, nobody can read via client SDK
     match /feedback/{docId} {
       allow create: if request.resource.data.message is string
