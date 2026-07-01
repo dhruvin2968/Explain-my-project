@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { id: "resume", label: "Resume Checker" },
   { id: "jobmatch", label: "JD Match" },
   { id: "interview", label: "Mock Interview" },
+  { id: "bookmock", label: "Book Interview", badge: "LIVE" },
   { id: "findjobs", label: "Find Jobs", pro: true },
 ];
 
@@ -196,6 +197,7 @@ export default function Header({ dark, setDark, user, onLogin, onLogout, credits
     interview: "/interviewprep",
     resume:    "/resumecheck",
     jobmatch:  "/jobmatch",
+    bookmock:  "/book-interview",
     findjobs:  "/findjobs",
   };
 
@@ -263,6 +265,12 @@ export default function Header({ dark, setDark, user, onLogin, onLogout, credits
                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md"
                   style={{ background: "#F5A623", color: "#000", lineHeight: 1.4 }}>
                   PRO
+                </span>
+              )}
+              {n.badge && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md"
+                  style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)", lineHeight: 1.4 }}>
+                  {n.badge}
                 </span>
               )}
             </button>
@@ -354,6 +362,12 @@ export default function Header({ dark, setDark, user, onLogin, onLogout, credits
                   <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md"
                     style={{ background: "#F5A623", color: "#000", lineHeight: 1.4 }}>
                     PRO
+                  </span>
+                )}
+                {n.badge && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md"
+                    style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)", lineHeight: 1.4 }}>
+                    {n.badge}
                   </span>
                 )}
               </button>

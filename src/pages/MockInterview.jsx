@@ -1,4 +1,5 @@
 ﻿import { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { auth } from '../firebase/config';
 
 const API = import.meta.env.VITE_API_URL;
@@ -15,6 +16,7 @@ const VERDICT_STYLE = {
 };
 
 export default function MockInterview({ dark, user, onLogin, onSubscribe }) {
+  const navigate = useNavigate();
   const bg       = dark ? '#050505' : '#f5f5f0';
   const cardBg   = dark ? '#0d0d0d' : '#ffffff';
   const border   = dark ? '#1a1a1a' : '#e5e5e5';
@@ -309,7 +311,7 @@ export default function MockInterview({ dark, user, onLogin, onSubscribe }) {
         )}
 
         {phase === 'setup' && (
-          <div>
+          <>
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid rgba(245,166,35,0.4)', borderRadius: 99, padding: '5px 14px', marginBottom: 28, fontSize: 11, color: '#F5A623', fontFamily: "'JetBrains Mono', monospace", background: 'rgba(245,166,35,0.08)' }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#F5A623', display: 'inline-block' }} />
@@ -364,7 +366,37 @@ export default function MockInterview({ dark, user, onLogin, onSubscribe }) {
               )}
               <p style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: dark ? '#444' : '#bbb' }}>Uses 1 credit · Interviewer voice works in Chrome &amp; Edge</p>
             </div>
+
+          {/* Human Interview CTA */}
+          <div
+            onClick={() => navigate('/book-interview')}
+            style={{
+              maxWidth: 540, margin: '20px auto 0', padding: '18px 22px',
+              background: dark ? '#0a0a0a' : '#fff',
+              border: `1px solid ${dark ? '#1e1e1e' : '#e0e0e0'}`,
+              borderRadius: 12, cursor: 'pointer', display: 'flex',
+              alignItems: 'center', justifyContent: 'space-between', gap: 16,
+              transition: 'border-color 0.2s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = '#F5A623'}
+            onMouseLeave={e => e.currentTarget.style.borderColor = dark ? '#1e1e1e' : '#e0e0e0'}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ fontSize: 28, flexShrink: 0 }}>🧑‍💼</div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: textMain, marginBottom: 3 }}>
+                  Want a real human interviewer?
+                </div>
+                <div style={{ fontSize: 12, color: textSub, lineHeight: 1.5 }}>
+                  Book a 1-on-1 live mock interview on Google Meet — ₹149/session
+                </div>
+              </div>
+            </div>
+            <div style={{ flexShrink: 0, fontSize: 12, fontWeight: 600, color: '#F5A623', whiteSpace: 'nowrap' }}>
+              Book now →
+            </div>
           </div>
+        </>
         )}
 
         {phase === 'loading' && (
