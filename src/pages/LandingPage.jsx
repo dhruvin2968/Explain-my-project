@@ -213,7 +213,7 @@ function TerminalBlock({ lines, accent }) {
 }
 
 // ─── Feature Section ──────────────────────────────────────────────────────────
-function FeatureSection({ feature, index }) {
+function FeatureSection({ feature, index, dark }) {
   const isEven = index % 2 === 0;
   return (
     <section id={feature.id} style={{ padding: "100px 0", borderTop: "1px solid #1a1a1a", scrollMarginTop: "70px" }}>
@@ -223,7 +223,7 @@ function FeatureSection({ feature, index }) {
             <div style={{ fontSize: "11px", letterSpacing: "0.15em", color: feature.accent, fontFamily: "'JetBrains Mono', monospace", marginBottom: "20px", textTransform: "uppercase" }}>
               {feature.tag}
             </div>
-            <h2 style={{ fontSize: "clamp(28px, 3.5vw, 44px)", fontFamily: "'Syne', sans-serif", fontWeight: 700, color: "#f0f0f0", lineHeight: 1.15, marginBottom: "24px", whiteSpace: "pre-line" }}>
+            <h2 style={{ fontSize: "clamp(28px, 3.5vw, 44px)", fontFamily: "'Syne', sans-serif", fontWeight: 700, color: dark ? "#f0f0f0" : "#0a0a0a", lineHeight: 1.15, marginBottom: "24px", whiteSpace: "pre-line" }}>
               {feature.headline}
             </h2>
             <p style={{ fontSize: "16px", color: "#666", lineHeight: 1.8, marginBottom: "32px", maxWidth: 420 }}>
@@ -248,7 +248,7 @@ function FeatureSection({ feature, index }) {
 }
 
 // ─── Sample Output Section ────────────────────────────────────────────────────
-function SampleOutputSection({ onTryNow }) {
+function SampleOutputSection({ onTryNow, dark }) {
   const [activeTab, setActiveTab] = useState("Elevator Pitch");
   const content = SAMPLE.content[activeTab];
 
@@ -261,7 +261,7 @@ function SampleOutputSection({ onTryNow }) {
           <div style={{ fontSize: "11px", letterSpacing: "0.15em", color: "#F5A623", fontFamily: "'JetBrains Mono', monospace", marginBottom: "16px", textTransform: "uppercase" }}>
             Live Demo
           </div>
-          <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: "clamp(26px, 4vw, 42px)", color: "#f0f0f0", marginBottom: "12px", lineHeight: 1.15 }}>
+          <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: "clamp(26px, 4vw, 42px)", color: dark ? "#f0f0f0" : "#0a0a0a", marginBottom: "12px", lineHeight: 1.15 }}>
             Here's what it actually generates.
           </h2>
           <p style={{ color: "#555", fontSize: "16px", maxWidth: 480, margin: "0 auto" }}>
@@ -425,7 +425,7 @@ export default function LandingPage({ dark, user, onLogin, onSubscribe }) {
 
       {/* ── SAMPLE OUTPUT ─────────────────────────────────────────────────── */}
       <div id="sample-output">
-        <SampleOutputSection onTryNow={() => navigate("/explain")} />
+        <SampleOutputSection onTryNow={() => navigate("/explain")} dark={dark} />
       </div>
 
       {/* ── SOCIAL PROOF BAR ─────────────────────────────────────────────── */}
@@ -447,7 +447,7 @@ export default function LandingPage({ dark, user, onLogin, onSubscribe }) {
 
       {/* ── FEATURE SECTIONS ─────────────────────────────────────────────── */}
       {FEATURES.map((feature, i) => (
-        <FeatureSection key={feature.id} feature={feature} index={i} />
+        <FeatureSection key={feature.id} feature={feature} index={i} dark={dark} />
       ))}
 
       {/* ── PRICING ──────────────────────────────────────────────────────── */}
@@ -471,10 +471,10 @@ export default function LandingPage({ dark, user, onLogin, onSubscribe }) {
                 {plan.highlight && (
                   <div style={{ display: "inline-block", background: "#F5A623", color: "#000", fontSize: "11px", fontWeight: 700, padding: "3px 10px", borderRadius: "4px", marginBottom: "16px", letterSpacing: "0.05em" }}>MOST POPULAR</div>
                 )}
-                <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: "18px", marginBottom: "6px", color: dark ? "#f0f0f0" : "#0a0a0a" }}>{plan.name}</div>
+                <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: "18px", marginBottom: "6px", color: "#f0f0f0" }}>{plan.name}</div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: "2px", marginBottom: "6px" }}>
-                  <span style={{ fontSize: "36px", fontWeight: 700, fontFamily: "Syne", color: plan.highlight ? "#F5A623" : (dark ? "#f0f0f0" : "#0a0a0a") }}>{plan.price}</span>
-                  <span style={{ color: "#555", fontSize: "14px" }}>{plan.period}</span>
+                  <span style={{ fontSize: "36px", fontWeight: 700, fontFamily: "Syne", color: plan.highlight ? "#F5A623" : "#f0f0f0" }}>{plan.price}</span>
+                  <span style={{ color: "#aaa", fontSize: "14px" }}>{plan.period}</span>
                 </div>
                 <p style={{ color: "#555", fontSize: "13px", marginBottom: "24px" }}>{plan.desc}</p>
                 <ul style={{ listStyle: "none", padding: 0, marginBottom: "28px", display: "flex", flexDirection: "column", gap: "10px" }}>
