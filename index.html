@@ -1,14 +1,30 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PrepNPitch - Ace every interview.</title>
-    <meta name="description" content="Turn your project into interview-ready answers in seconds." />
+    <meta
+      name="description"
+      content="Turn your project into interview-ready answers in seconds."
+    />
+    
+    <!-- Google tag (gtag.js) - MOVED HERE -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CNP1SZ3EYD"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-CNP1SZ3EYD");
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <!-- Cashfree and React scripts stay here -->
     <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
