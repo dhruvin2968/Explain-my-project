@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 // ─── Content ──────────────────────────────────────────────────────────────────
 const LAST_UPDATED = "June 24, 2025";
 const CONTACT_EMAIL = "prepnpitch@gmail.com";
-const CONTACT_PHONE = "+91 82916 19774";
-const BUSINESS_NAME = "Dhruvin Mehta";
+// const CONTACT_PHONE = "+91 82916 19774";
+const BUSINESS_NAME = "PrepNPitch";
 const BRAND = "PrepNPitch";
 
 const CONTENT = {
@@ -199,7 +199,7 @@ const CONTENT = {
         heading: "6. How to Request a Refund",
         body: [
           "Email: " + CONTACT_EMAIL,
-          "Phone / WhatsApp: " + CONTACT_PHONE,
+          // "Phone / WhatsApp: " + CONTACT_PHONE,
           "Include: your registered email, Razorpay payment ID, date of purchase, and reason for refund.",
           "We will respond within 2 business days. Approved refunds are processed within 5–7 business days to your original payment method.",
         ],
@@ -246,7 +246,7 @@ function ContactBody({ dark }) {
 
   const cards = [
     { icon: "✉", label: "Email", value: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
-    { icon: "📞", label: "Phone / WhatsApp", value: CONTACT_PHONE, href: `tel:+918291619774` },
+    // { icon: "📞", label: "Phone / WhatsApp", value: CONTACT_PHONE, href: `tel:+918291619774` },
   ];
 
   return (
